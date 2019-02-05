@@ -68,14 +68,29 @@ local tags = {
 		}
 		
 -- Base de données
-local db = {
+db = {
 	["golden retriever"] = {
-		height = "taille moyenne"
+		height = "100 cm",
+		weight = " BIG DOG kg/m^3",
+		origin = "Système Solaire",
+		use = {
+			[1] = "chien de police",
+			[2] = "chien de compagnie",
+			[3] = "chien de bail",
+			[4] = "chien de montagne",
+			[5] = "chien de campagne"
+		}
 	},
-	["pug"] = {
-		height = "petite taille"
+	["beagle"] = {
+		height = "19 cm",
+		weight = "15 kg",
+		origin = "US of A",
+		use = {
+			[1] = "chien de traineau",
+			[2] = "chien d'aveugle"
+		}
 	}
-}		
+}	
 
 if haveTag(seq, "#race") then
 			local race = tagStringInLink(seq, "#race", "#race")
