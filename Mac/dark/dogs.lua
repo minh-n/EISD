@@ -100,9 +100,9 @@ if haveTag(seq, "#race") then
 			db[race].height = height
 end
 		
-print("###\n")
-print(seq:tostring(tags))
-print("\n###")
+-- print("###\n")
+-- print(seq:tostring(tags))
+-- print("\n###")
 
 
-print(serialize(db))
+-- print(serialize(db))
