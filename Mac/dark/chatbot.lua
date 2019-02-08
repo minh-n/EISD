@@ -212,7 +212,7 @@ function userInput()
 				hasAnswered = true
 		elseif (contextWeight and contextRace) then
 								
-								print("\nInfochien : le poids du " .. stringRace .. " est de " .. db[stringRace].weight .. ".")
+								print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
 								hasAnswered = true
 		elseif (contextOrigin and contextRace) then					
 				print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
