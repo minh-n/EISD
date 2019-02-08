@@ -2,6 +2,7 @@ Readme chatbot v .1
 
 Les questions que nous pouvons poser au bot sont des questions simples, contenant un type d'information et/ou une race de chien.
 
+Avec la base de donnée réelle, il n'est pas encore possible de poser des questions sur le poids.
 
 -----------
 
@@ -72,3 +73,48 @@ Et le beagle ?
 
 Infochien : l'origine du beagle est : US of A.
 Infochien : d'autres questions ?
+
+----------
+
+Etat actuel de la BD, parsée à partir des textes :
+
+
+{
+  beagle = {
+    origin = "angleterre",
+    height = "de taille petite",
+    use = {
+      [1] = "chien de compagnie",
+      [2] = "chien de chasse",
+      [3] = "chien de détection",
+      [4] = "chien de laboratoire",
+    },
+  },
+  ["labrador retriever"] = {
+    origin = "royaume - uni",
+    height = "de taille moyenne",
+    use = {
+      [1] = "chien de compagnie",
+      [2] = "chien de rapport",
+      [3] = "chien d ' assistance",
+      [4] = "chien de sauvetage",
+      [5] = "chien de détection",
+      [6] = "chien policier",
+      [7] = "chien truffier",
+    },
+  },
+  ["terre - neuve"] = {
+    origin = "île canadienne de terre - neuve",
+    height = "forte taille",
+    use = {
+      [1] = "chien de compagnie",
+      [2] = "chien de sauvetage",
+    },
+  },
+}
+
+
+
+
+
+----------
