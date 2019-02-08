@@ -28,7 +28,8 @@ Utilité
 
 Le labrador est un chien créé pour la chasse : c'est un chien de rapport notamment dans les marais réputé en  raison de son très bon odorat, de sa « dent douce » et de ses aptitudes exceptionnelles de natation. Il est  également utilisé comme chien de recherche au sang.  Le labrador est très utilisé comme chien de travail, notamment comme chien d'assistance aux handicapés  visuels et physiques, chien de sauvetage, chien de détection, chien policier, chien truffier.  Avec le Golden retriever, le labrador est utilisé comme chien d'assistance aux personne à mobilité réduite,  mais aussi comme chien d'éveil aux personnes autistes, trisomiques ou polyhandicapées. En France, ces deux  races sont principalement sélectionnés par l'association Handi'chiens grâce à leur caractère calme, leur  sociabilité, leur instinct de rapport d'objets et apportent un soutien moral et affectif aux personnes en  situation de handicap ainsi qu'une grande autonomie.  Le Labrador fait également partie des chiens de sauvetage à l'eau (avec le Terre-neuve, le Landseer, tous les  retrievers, le Leonberg, le Berger polonais de Podhale, l'Hovawart, les bouviers suisses et tous les chiens  d'eau du 8e groupe, le Terrier noir russe, et le Saint-Bernard).  Capable de vivre aussi bien en ville qu'à la campagne, c'est un chien de compagnie qui a besoin d'exercice  physique.
 
-###
+Informations structurelles
+
 Région d’origine
 
 Région	 Canada (Terre-Neuve-et-Labrador)
