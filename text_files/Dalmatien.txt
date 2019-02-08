@@ -122,7 +122,7 @@ Utilité
 
 Le dalmatien est un chien de compagnie sportif qui supportera mal l'appartement sans de longues promenades une fois par  jour. Le dalmatien est une race qui a absolument besoin de se dépenser et dont le caractère indépendant peut surprendre  le maître novice. C'est une race utilisée en agility.
 
-Informations structurelles
+Informations structurées
 
 Région d’origine
 
