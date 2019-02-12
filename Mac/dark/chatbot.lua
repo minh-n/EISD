@@ -30,16 +30,20 @@ pipe:basic()
 --pipe:lexicon("#questStarcraft", {"protoss", "zerg", "terran"})
 
 raceList = {"beagle", "terre - neuve", "labrador"}
-sizeList = {"taille", "mesure", "hauteur", "cm", "m"}
+sizeList = {"taille", "mesure", "hauteur", "cm", "m", "plus grand"}
 useList = {"utilisé", "utilité", "utilisation", "use", "emploi"}
 originList = {"origine", "vient", "où", "where", "pays", "région"}
-weightList = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes"}
+weightList = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "plus lourd"}
+
+
+compareList = {"entre le", "entre les", "quel est le plus", "lequel est", "quel chien est le plus", "comparer", "comparaison", "quelle est", "quel est"}
 
 pipe:lexicon("#race", raceList)
 pipe:lexicon("#size", sizeList)
 pipe:lexicon("#use", useList)
 pipe:lexicon("#origin", originList)
 pipe:lexicon("#weight", weightList)
+pipe:lexicon("#compare", compareList)
 
 
 
@@ -48,7 +52,7 @@ function lev(line)
 	words = {}
 	for m in line:gmatch("%w+") do table.insert(words, m) end --separating the user input into words
 
-	levCoef = 2
+	levCoef = 1
 
 	for _,word in pairs(words) do 
 
@@ -99,15 +103,62 @@ function lev(line)
 	return line
 end
 
+
+function convertWordIntoSize(line)
+
+	size = 0
+	line = line:gsub("kg", "")
+	patternNumbers = "[0-9]+"
+
+	if string.match(line, patternNumbers) then
+	    size = line:tostring()
+	end 
+
+	if((string.find(line, "grand") ~= nil) or string.find(line, "fort") ~= nil)then
+		size = 50
+	elseif(string.find(line, "moyen") ~= nil) then
+		size = 30
+	else
+		size = 10
+	end	
+
+	return size
+end
+
 --read the user's input
 function userInput()
 	--print("-Debug: userInput()\n")
 	print("Infochien : Bonjour je suis un chienbot ! Je peux parler du Beagle, du Labrador Retriever ou du Terre-Neuve.\n")
 
+	local contextTable = { 
+		["race"] = {
+				value = false,
+				label = "la race"
+		},
+		["use"] = {
+				value = false,
+				label = "l'utilité"
+		},
+		["size"] = {
+				value = false,
+				label = "la taille"
+		},
+		["weight"] = {
+				value = false,
+				label = "le poids"
+		},
+		["origin"] = {
+				value = false,
+				label = "l'origine"
+		}
+	}
+
+
 	while 1 do
 		line = io.read()
 		hasAnswered = false
 		currentAnswerHasMeaning = false
+
 		line = string.lower(line) --démajusculer
 		if line == "quitter" or line == "quit" or line == "q" then
 			break;
@@ -122,56 +173,73 @@ function userInput()
 		
 		pipe(line)
 		
-				--print(dark.pipeline(line))
-				--print(line)
+		--print(dark.pipeline(line))
+		--print(line)
 
-				-- TODO : gestion du contexte mieux
+		-- TODO : gestion du contexte en mieux
 				-- stocker le chien précédent ?
-
+				-- les accents
 				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles
 				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA)
 				-- donner une info complémentaire
 
 
+
+		--todo : reset le contexte quand on mentionne une race 
+
 		-- Trouver les tags des questions avec des moyens conventionnels
 		if (#line["#race"]) ~= 0 then
-					contextRace = true
-					stringRace = line:tag2str("#race")[1]
-					if stringRace == "labrador" then
+					contextTable["race"].value = true
+					if(stringRace == nil) then
+						if((#line["#race"]) == 2) then
+							previousRace = line:tag2str("#race")[1]
+							stringRace = line:tag2str("#race")[2]
+						else
+							stringRace = line:tag2str("#race")[1]
+						end
+
+					else
+						previousRace = stringRace
+						stringRace = line:tag2str("#race")[1]
+					end	
+
+					if (stringRace == "labrador") then
 						stringRace = "labrador retriever"
+					elseif (previousRace == "labrador") then
+						previousRace = "labrador retriever"
 					end
 					currentAnswerHasMeaning = true
 		end
 		if (#line["#use"]) ~= 0 then
-					contextUse = true
+					contextTable["use"].value = true
 
-					contextSize = false
-					contextOrigin = false
-					contextWeight = false
+					contextTable["size"].value = false
+					contextTable["origin"].value = false
+					contextTable["weight"].value = false
 					currentAnswerHasMeaning = true
 		end
 		if (#line["#size"]) ~= 0 then
-					contextSize = true
+					contextTable["size"].value = true
 
-					contextWeight = false
-					contextOrigin = false
-					contextUse = false
+					contextTable["weight"].value = false
+					contextTable["origin"].value = false
+					contextTable["use"].value = false
 					currentAnswerHasMeaning = true
 		end
 		if (#line["#weight"]) ~= 0 then
-					contextWeight = true
+					contextTable["weight"].value = true
 
-					contextSize = false
-					contextOrigin = false
-					contextUse = false
+					contextTable["size"].value = false
+					contextTable["origin"].value = false
+					contextTable["use"].value = false
 					currentAnswerHasMeaning = true
 		end
 		if (#line["#origin"]) ~= 0 then
-					contextOrigin = true
+					contextTable["origin"].value = true
 
-					contextWeight = false
-					contextSize = false
-					contextUse = false
+					contextTable["weight"].value = false
+					contextTable["size"].value = false
+					contextTable["use"].value = false
 					currentAnswerHasMeaning = true
 		end
 
@@ -182,64 +250,118 @@ function userInput()
 
 
 		-- génération du dialogue
+
+		--
+		-- HAS MEANING
+		--
 		if(currentAnswerHasMeaning) then
-					--
-					--HAS MEANING
-					--
-		if (contextSize and contextRace)then
-						
-				print("\nInfochien : le " .. stringRace .. " est un chien " .. db[stringRace].height .. ".")
-				hasAnswered = true
-		elseif (contextUse and contextRace)then
-						
-				io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
-					 
-				-- For every item in the list, including correct use of comma
-				for useCount = 1, #db[stringRace].use do
-							
-						if(useCount == #db[stringRace].use) then
-								io.write("et " .. db[stringRace].use[useCount] .. ".")
+				---------------------------------
+				--is comparison
+				if((#line["#compare"]) ~= 0 and previousRace ~= nil) then
 
-						elseif (useCount == #db[stringRace].use-1) then
+					if (contextTable["size"].value and contextTable["race"].value)then
 
-								io.write(db[stringRace].use[useCount] .. " ")
-						else 
-								io.write(db[stringRace].use[useCount] .. ", ")
+						dogSize = convertWordIntoSize(db[stringRace].height)
+						previousSize = convertWordIntoSize(db[previousRace].height)
+
+						if(dogSize > previousSize) then
+							print("\nInfochien : le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").\n")
+						else
+							print("\nInfochien : le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").\n")
 						end
+
+						
+						hasAnswered = true
+					elseif (contextTable["use"].value and contextTable["race"].value)then
+									
+							io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
+								 
+							-- For every item in the list, including correct use of comma
+							for useCount = 1, #db[stringRace].use do
+										
+									if(useCount == #db[stringRace].use) then
+											io.write("et " .. db[stringRace].use[useCount] .. ".")
+
+									elseif (useCount == #db[stringRace].use-1) then
+
+											io.write(db[stringRace].use[useCount] .. " ")
+									else 
+											io.write(db[stringRace].use[useCount] .. ", ")
+									end
+							end
+
+							io.write("\n")
+							hasAnswered = true
+					elseif (contextTable["weight"].value and contextTable["race"].value) then			
+							print("Infochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
+							print("Infochien : le poids du " .. previousRace .. " est " .. db[previousRace].weight .. "kg.")
+							print("\nInfochien : Todo : comparer ces deux tailles.")
+							hasAnswered = true
+					elseif (contextTable["origin"].value and contextTable["race"].value) then					
+							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
+							hasAnswered = true
+					elseif (contextTable["race"].value) then
+							print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".\n")
+					else
+						for k,context in pairs(contextTable) do
+							if (context.value) then
+								print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
+							end	
+						end
+					end
+
+				---------------------------------
+				--is not comparison
+				else
+					if (contextTable["size"].value and contextTable["race"].value)then
+									
+							print("\nInfochien : le " .. stringRace .. " est un chien " .. db[stringRace].height .. ".")
+							hasAnswered = true
+					elseif (contextTable["use"].value and contextTable["race"].value)then
+									
+							io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
+								 
+							-- For every item in the list, including correct use of comma
+							for useCount = 1, #db[stringRace].use do
+										
+									if(useCount == #db[stringRace].use) then
+											io.write("et " .. db[stringRace].use[useCount] .. ".")
+
+									elseif (useCount == #db[stringRace].use-1) then
+
+											io.write(db[stringRace].use[useCount] .. " ")
+									else 
+											io.write(db[stringRace].use[useCount] .. ", ")
+									end
+							end
+
+							io.write("\n")
+							hasAnswered = true
+					elseif (contextTable["weight"].value and contextTable["race"].value) then
+											
+											print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
+											hasAnswered = true
+					elseif (contextTable["origin"].value and contextTable["race"].value) then					
+							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
+							hasAnswered = true
+					elseif (contextTable["race"].value) then
+							print("\nInfochien : Parlons du ".. stringRace .. ".\n")
+					else
+						for k,context in pairs(contextTable) do
+							if (context.value) then
+								print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
+							end	
+						end
+					end
 				end
 
-				io.write("\n")
-				hasAnswered = true
-		elseif (contextWeight and contextRace) then
-								
-								print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
-								hasAnswered = true
-		elseif (contextOrigin and contextRace) then					
-				print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
-				hasAnswered = true
-		elseif (contextRace) then
-				print("\nInfochien : Parlons du ".. stringRace .. ".\n")
-		elseif (contextOrigin) then
-				print("\nInfochien : De quel chien voulez-vous savoir l'origine ?\n")
-		elseif (contextUse) then
-				print("\nInfochien : De quel chien voulez-vous savoir l'utilité ?\n")
-		elseif (contextWeight) then
-				print("\nInfochien : De quel chien voulez-vous savoir le poids ?\n")
-		elseif (contextSize) then
-				print("\nInfochien : De quel chien voulez-vous savoir la taille ?\n")
-		end
 
-		if (hasAnswered == true) then
 
-				io.write("Infochien : " .. otherAnswer[math.random(#otherAnswer)] .. "\n\n")
-				hasAnswered = false
-		end
-
-				--
-				-- HAS NO MEANING
-				--
+		--
+		-- Else: HAS NO MEANING
+		--
 		else
-				print("\nJe n'ai pas compris la question. Pouvez-vous reformuler s'il-vous-plait ?\n")
+				print("Infochien : Je n'ai pas compris la question. Pouvez-vous reformuler s'il-vous-plait ?\n")
 				hasAnswered = false
 		end
 
@@ -249,6 +371,11 @@ function userInput()
 end
 
 
+if (hasAnswered == true) then
+
+				io.write("Infochien : " .. otherAnswer[math.random(#otherAnswer)] .. "\n\n")
+				hasAnswered = false
+		end
 
 -- Main
 
