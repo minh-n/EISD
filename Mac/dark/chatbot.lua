@@ -26,17 +26,14 @@ require("extractor")
 -- lexique
 pipe = dark.pipeline()
 pipe:basic()
---pipe:lexicon("#vocab", "lexiqueChatbot1.txt")
---pipe:lexicon("#questStarcraft", {"protoss", "zerg", "terran"})
 
 raceList = {"beagle", "terre - neuve", "labrador"}
-sizeList = {"taille", "mesure", "hauteur", "cm", "m", "plus grand"}
+sizeList = {"taille", "mesure", "hauteur", "cm", "m"}
+qualificatifList = {"grand", "petit", "grande", "petite"}
 useList = {"utilisé", "utilité", "utilisation", "use", "emploi"}
 originList = {"origine", "vient", "où", "where", "pays", "région"}
 weightList = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "plus lourd"}
-
-
-compareList = {"entre le", "entre les", "quel est le plus", "lequel est", "quel chien est le plus", "comparer", "comparaison", "quelle est", "quel est"}
+compareList = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "quel chien est le plus", "le plus", "la plus" }
 
 pipe:lexicon("#race", raceList)
 pipe:lexicon("#size", sizeList)
@@ -44,6 +41,7 @@ pipe:lexicon("#use", useList)
 pipe:lexicon("#origin", originList)
 pipe:lexicon("#weight", weightList)
 pipe:lexicon("#compare", compareList)
+pipe:lexicon("#qualif", qualificatifList)
 
 
 
@@ -104,6 +102,7 @@ function lev(line)
 end
 
 
+
 function convertWordIntoSize(line)
 
 	size = 0
@@ -118,12 +117,48 @@ function convertWordIntoSize(line)
 		size = 50
 	elseif(string.find(line, "moyen") ~= nil) then
 		size = 30
-	else
+	else --petit
 		size = 10
 	end	
 
 	return size
 end
+
+
+function getBiggestDog()
+
+	biggestDog = ""
+
+	biggestHeight = 0
+
+	for k,v in pairs(db) do
+		currentHeight = convertWordIntoSize(v.height)
+		if(currentHeight > biggestHeight) then
+			biggestDog = k
+			biggestHeight =  currentHeight
+		end
+	end
+
+	return biggestDog
+end
+
+
+
+function getUserAnswer()
+
+	ans = io.read()
+
+	ans = string.lower(ans) --démajusculer
+
+	--putting spaces around punctuation signs
+	ans = ans:gsub("%p", " %0 ") --on met des espaces sur la ponctuation
+
+	return ans
+
+end
+
+
+
 
 --read the user's input
 function userInput()
@@ -177,13 +212,11 @@ function userInput()
 		--print(line)
 
 		-- TODO : gestion du contexte en mieux
-				-- stocker le chien précédent ?
-				-- les accents
-				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles
-				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA)
-				-- donner une info complémentaire
-
-
+				-- stocker le chien précédent : OK !
+				-- les accents : hmm...
+				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles : pas ouf en vrai
+				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA) : OK !
+				-- donner une info complémentaire : pas ouf ?
 
 		--todo : reset le contexte quand on mentionne une race 
 
@@ -203,6 +236,7 @@ function userInput()
 						stringRace = line:tag2str("#race")[1]
 					end	
 
+					--labrador
 					if (stringRace == "labrador") then
 						stringRace = "labrador retriever"
 					elseif (previousRace == "labrador") then
@@ -242,7 +276,10 @@ function userInput()
 					contextTable["use"].value = false
 					currentAnswerHasMeaning = true
 		end
-
+		if (#line["#compare"]) ~= 0 then
+					
+					currentAnswerHasMeaning = true
+		end
 
 		--Trouver les tags avec la distance de Levenshtein
 
@@ -257,58 +294,85 @@ function userInput()
 		if(currentAnswerHasMeaning) then
 				---------------------------------
 				--is comparison
-				if((#line["#compare"]) ~= 0 and previousRace ~= nil) then
+				if((#line["#compare"]) ~= 0 ) then
 
-					if (contextTable["size"].value and contextTable["race"].value)then
+					print("\nInfochien : voulez-vous comparer deux chiens, ou faire une comparaison absolue?")
+					answer = getUserAnswer()
+					-------------------
+					if(answer == "ouaf") then --comparaison entre deux chiens
+						if(previousRace ~= nil) then
+								if (contextTable["size"].value and contextTable["race"].value)then
 
-						dogSize = convertWordIntoSize(db[stringRace].height)
-						previousSize = convertWordIntoSize(db[previousRace].height)
+														dogSize = convertWordIntoSize(db[stringRace].height)
+														previousSize = convertWordIntoSize(db[previousRace].height)
 
-						if(dogSize > previousSize) then
-							print("\nInfochien : le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").\n")
+														if(dogSize > previousSize) then
+															print("\nInfochien : le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").\n")
+														else
+															print("\nInfochien : le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").\n")
+														end
+
+														hasAnswered = true
+								elseif (contextTable["use"].value and contextTable["race"].value)then
+																	
+															io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
+																 
+															-- For every item in the list, including correct use of comma
+															for useCount = 1, #db[stringRace].use do
+																		
+																	if(useCount == #db[stringRace].use) then
+																			io.write("et " .. db[stringRace].use[useCount] .. ".")
+
+																	elseif (useCount == #db[stringRace].use-1) then
+
+																			io.write(db[stringRace].use[useCount] .. " ")
+																	else 
+																			io.write(db[stringRace].use[useCount] .. ", ")
+																	end
+															end
+
+															io.write("\n")
+															hasAnswered = true
+								elseif (contextTable["weight"].value and contextTable["race"].value) then			
+															print("Infochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
+															print("Infochien : le poids du " .. previousRace .. " est " .. db[previousRace].weight .. "kg.")
+															print("\nInfochien : Todo : comparer ces deux tailles.")
+															hasAnswered = true
+								elseif (contextTable["origin"].value and contextTable["race"].value) then					
+															print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
+															hasAnswered = true
+								elseif (contextTable["race"].value) then
+										print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".\n")
+								else
+														for k,context in pairs(contextTable) do
+															if (context.value) then
+																print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
+															end	
+														end
+								end
+
 						else
-							print("\nInfochien : le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").\n")
+							print("\nDebug : pas de contexte go mettre context svp")
+							--il attend une réponse après, c'est pas normal
+							hasAnswered = true
 						end
-
+					-------------------
+					elseif (answer == "ouaf ouaf") then --comparaison absolue
 						
-						hasAnswered = true
-					elseif (contextTable["use"].value and contextTable["race"].value)then
-									
-							io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
-								 
-							-- For every item in the list, including correct use of comma
-							for useCount = 1, #db[stringRace].use do
-										
-									if(useCount == #db[stringRace].use) then
-											io.write("et " .. db[stringRace].use[useCount] .. ".")
+						if ((#line["#qualif"]) ~= 0)then
 
-									elseif (useCount == #db[stringRace].use-1) then
+							biggestDog = getBiggestDog()
+							--if(line:tag2str("#size")[1] == "grand") then
+								print("\nInfochien : le chien le plus grand de la BD est le " .. biggestDog .. ".\n")
+							
+							--end
 
-											io.write(db[stringRace].use[useCount] .. " ")
-									else 
-											io.write(db[stringRace].use[useCount] .. ", ")
-									end
-							end
-
-							io.write("\n")
-							hasAnswered = true
-					elseif (contextTable["weight"].value and contextTable["race"].value) then			
-							print("Infochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
-							print("Infochien : le poids du " .. previousRace .. " est " .. db[previousRace].weight .. "kg.")
-							print("\nInfochien : Todo : comparer ces deux tailles.")
-							hasAnswered = true
-					elseif (contextTable["origin"].value and contextTable["race"].value) then					
-							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
-							hasAnswered = true
-					elseif (contextTable["race"].value) then
-							print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".\n")
-					else
-						for k,context in pairs(contextTable) do
-							if (context.value) then
-								print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
-							end	
+								hasAnswered = true
 						end
+
 					end
+				
+
 
 				---------------------------------
 				--is not comparison
@@ -338,9 +402,8 @@ function userInput()
 							io.write("\n")
 							hasAnswered = true
 					elseif (contextTable["weight"].value and contextTable["race"].value) then
-											
-											print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
-											hasAnswered = true
+							print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
+							hasAnswered = true
 					elseif (contextTable["origin"].value and contextTable["race"].value) then					
 							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. db[stringRace].origin .. ".")
 							hasAnswered = true
