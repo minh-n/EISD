@@ -1,0 +1,9 @@
+grand
+grande
+grands
+petit
+petite
+petits
+moyen
+moyens
+moyenne

@@ -1,194 +1,138 @@
 dark = require("dark")
-
--- Ensemble de données
---local line = "Le golden retriever ou simplement golden  Le terre-neuve ( ou )  Le retriever du Labrador, plus communément appelé labrador retriever  est une race de chien d'origine britannique. Sélectionné comme chien de rapport, le golden retriever est une race très populaire depuis les années 1990. Il s'agit d'un chien de taille moyenne possédant une robe à poil long, de couleur crème à doré foncé. "
+require("functions")
 
 -- Création d'une pipeline pour stocker les filtres
-local pipeline = dark.pipeline()
 local pre_proc = dark.pipeline()
 local pipe_race = dark.pipeline()
 local dog_use = dark.pipeline()
 local dog_origin = dark.pipeline()
 local dog_height = dark.pipeline()
+local dog_weight = dark.pipeline()
+local dog_structured = dark.pipeline()
 
--- FUNCTIONS
-function haveTag(seq, tag)
-	return #seq[tag] ~= 0
-end
-
-function tagString(seq, tag, b_gin, e_nd)
-	-- Valeurs par défaut
-	b_gin, e_nd = b_gin or 1, e_nd or #seq
-	
-	if not haveTag(seq, tag) then
-		return
-	end
-	
-	for idx, pos in ipairs(seq[tag]) do
-		local start, finish = pos[1], pos[2]
-		if start >= b_gin and finish <= e_nd then
-			local res = {}
-	
-			-- Concaténer les tokens avec des espaces entre
-			for i = start, finish do 
-				res[#res + 1] = seq[i].token
-			end
-			
-			return table.concat(res, " ")
-		end
-	end
-end
-
-function tagStringInLink(seq, link, tag)
-	if not haveTag(seq, link) then
-		return
-	end
-	
-	local pos = seq[link][1]
-	local start, finish = pos[1], pos[2]
-	
-	return tagString(seq, tag, start, finish)
-end
-
-function createUseArray(seq)
-	if not haveTag(seq, "#use") then
-		return
-	end
-	
-	use_array = {}
-	exists = {}
-	use_array[#use_array + 1] = "chien de compagnie"
-	exists["chien de compagnie"] = 1
-	
-	for idx, pos in ipairs(seq["#use"]) do
-		local start, finish = pos[1], pos[2]
-		local res = {}
-		for i = start, finish do 
-			if seq[i].token == "chiens" then
-				res[#res + 1] = "chien"
-			else
-				res[#res + 1] = seq[i].token
-			end
-		end
-		temp = table.concat(res, " ")
-		
-		if not exists[temp] then
-			use_array[#use_array + 1] = temp
-			exists[temp] = true
-		end
-	end
-	
-	return use_array
-end
-
--- Annotateurs classique (donne des tags aux tokens)
-pipeline:basic()					
---pipeline:lexicon("#unit", "units.txt")
-pre_proc:lexicon("#section-use", "section_use.txt")
-pre_proc:lexicon("#section-history", "section_history.txt")
-pre_proc:lexicon("#section-description", "section_description.txt")
-pre_proc:lexicon("#section-behavior", "section_behavior.txt")
-pre_proc:lexicon("#section-health", "section_health.txt")
-dog_use:lexicon("#use", "dog_use.txt")
-dog_height:lexicon("#unit", "units.txt")
-dog_height:lexicon("#heightvoc", "height_voc.txt")
+-- Annotateurs classique (donne des tags aux tokens)					
+dog_use:lexicon("#use", "lexicons/dog_use.txt")
+dog_height:lexicon("#unit", "lexicons/height_units.txt")
+dog_height:lexicon("#heightvoc", "lexicons/height_voc.txt")
+dog_weight:lexicon("#weightunit", "lexicons/weight_units.txt")
 
 
--- PATTERNS
---pipeline:pattern([[	("Le" | "appelé") [#race (#w | #w #w)] (( "ou" | "est") | /\(/ ) ]])
-pipeline:pattern([[	[#measure #d #unit] ]])
-pipeline:pattern([[ [#height ( "taille" | "mesure" ) .* #measure] ]])
-pipeline:pattern([[	("Le" | "appelé" | "le") [#race (#w | #w #w | #w "-" #w)] (( "ou" | "est" | "fait") | /\(/ ) ]])
---pipeline:pattern([[ /L[ae]/ [#monument ("tour" | "pont") #W] ]])
---pipeline:pattern([[ [#height #monument .* #measure] ]])
+-- Patterns
+pre_proc:basic()
 pre_proc:pattern([[ [#detle (la | le | l "'" | les)] ]])
-pre_proc:pattern([[ [#detde de #detle | du | des | d "'"] ]])
-pipe_race:basic()
+pre_proc:pattern([[ [#detde de #detle? | du | des | d "'"] ]])
 pipe_race:pattern([[ [#race (#w "-" #w | #w{1,4})] ]])
-dog_origin:basic()
 dog_origin:pattern([[ 
-	((originaire #detde) | (#detde origine) | #detde origine "," #detle) 
+	(((originaire | originaires) #detde) | (#detde origine) | #detde origine "," #detle)
 	[#origin #w{1,6} "-" #w | #w{1,6} ] 
-	(("," | ".") | "(" ) 
+	(("," | ".") | "(" | "et" ) 
 ]])
-dog_height:pattern([[    [#measure (#d "à")? #d #unit] ]])
-dog_height:pattern([[    [#height (#w taille? #heightvoc taille? | "forte" "taille")] ]])
+dog_height:pattern([[   [#measure (#d "à")? #d #unit] ]])
+dog_height:pattern([[   [#height #w (#heightvoc taille | "forte" "taille" | #w "variétés" "de" "taille")] ]])
+dog_height:pattern([[   [#height #w taille #heightvoc ("à" #heightvoc)?] ]])
+dog_weight:pattern([[ 	[#weight #d] #weightunit] ]])
+dog_structured:pattern([[ [#measure #d] #unit ]])
 
--- Base de données
+-- Bases de données (non structurées et structurées)
 db = {}		
+local si = {}
 
--- DEBUG
-local tags = { ["#use"] = "cyan" }
+-- Sections
+local section_structured = { "informations structurées" }
+
+-- Debug
+local tags = { ["#origin"] = "red",
+				["#detde"] = "cyan"
+}
 
 os.chdir("text_files")
 for filename in os.dir(".") do
 	local race = NIL
-	local section = "RACE"
+	local structured = false
 	
-	--filename = "Labrador.txt"
+	--filename = "EpagneulBreton.txt"
 
 	for line in io.lines(filename) do	
+		line = line:gsub("\r", "")
 		line = line:gsub("%’", "'")			
 		line = line:gsub("%p", " %0 "):lower()
 
 		local seq = dark.sequence(line)
 		pre_proc(seq)
-
-		if haveTag(seq, "#section-use") then section = "USE"
-		--elseif haveTag(seq, "#section-history") then section = "HISTORY"
-		--elseif haveTag(seq, "#section-description") then section = "DESCRIPTION"
-		--elseif haveTag(seq, "#section-behavior") then section = "BEHAVIOR"
-		--elseif haveTag(seq, "#section-health") then section = "HEALTH"
-		end
+		pipe_race(seq) -- Parsing dog race
+		dog_use(seq) -- Parsing dog use
+		dog_origin(seq) -- Parsing dog origin
+		dog_height(seq) -- Parsing dog_height
+		dog_weight(seq) -- Parsing dog weight
+		dog_structured(seq)
 		
-		if section == "USE" then
-			dog_use(seq) -- Pipeline dog_use
+		if structured then -- STRUCTURED
+			-- Structured weight
+			if haveTag(seq, "#weight") and si[race].weight == NIL then		
+				low, high = structuredUnit(seq, "#weight")
+				si[race].weight = {}
+				si[race].weight.low = low
+				si[race].weight.high = high
+			end	
 			
-			use_array = createUseArray(seq)
-			if use_array ~= NIL then
-				db[race].use = use_array
-				section = "NOTHING"
-			end
-		elseif section == "RACE" then
-			pipe_race(seq) -- Pipeline race
-			
-			if haveTag(seq, "#race") then
+			-- Structured height
+			if haveTag(seq, "#measure") and si[race].height == NIL then		
+				low, high = structuredUnit(seq, "#measure")
+				si[race].height = {}
+				si[race].height.low = low
+				si[race].height.high = high
+			end				
+		else
+			-- RACE
+			if haveTag(seq, "#race") and race == NIL then
 				race = tagStringInLink(seq, "#race", "#race")
 				db[race] = {} or db[race]
-			end
-			section = "INTRODUCTION"
-		elseif section == "INTRODUCTION" then
-			dog_origin(seq) -- Pipeline dog_origin
-
-			local origin = tagStringInLink(seq, "#origin", "#origin")
-			if origin ~= NIL then
-				db[race].origin = origin
-			end		
-			
-			dog_height(seq)
-			
-			if(haveTag(seq, "#height")) then
-				db[race].height = seq:tag2str("#height")[1]
+				db[race].use = initializeArray() -- Initialize use
+				db[race].weight = 0
+				db[race].measure = 0
+				si[race] = {}
 			end
 			
-			-- If we found the right line (not empty)
-			if(line ~= "") then
-				section = "NOTHING"
-			end 	
-		elseif section == "HISTORY" then
-		elseif section == "DESCRIPTION" then
-			--pipeline(seq)
-			--db[race] = {} or db[race]
-			--if haveTag(seq, "#height") then
-			--	local height = tagStringInLink(seq, "#height", "#height")
-			--	db[race].height = height	
-			--end
-		elseif section == "BEHAVIOR" then
-		elseif section == "HEALTH" then
+			if(race ~= NIL) then
+				-- USE
+				use_array = getUseArray(seq)
+				db[race].use = concatArrays(db[race].use, use_array)
+				
+				-- ORIGIN
+				local origin = tagStringInLink(seq, "#origin", "#origin")
+				if origin ~= NIL and db[race].origin == NIL then
+					db[race].origin = origin
+				end
+				
+				-- HEIGHT
+				if haveTag(seq, "#height") and db[race].height == NIL then
+					db[race].height = seq:tag2str("#height")[1]
+				end
+				
+				measure = getHeight(seq)
+				if db[race].measure < measure then
+					db[race].measure = measure
+				end
+					
+				-- WEIGHT
+				weight = getWeight(seq)
+				if db[race].weight < weight then
+					db[race].weight = weight
+				end
+			end
 		end
+		
+		-- Check if we are reading structured data
+		if checkSection(section_structured, line) then structured = true end
 	end	
+	
+	fillingMissingValues(race, db, si)
 end
 
+local statistics = compareWeight(db, si)
+statistics = compareHeight(db, si, statistics)
+--print(serialize(statistics))
 
---print("\n#############\n")
 --print(serialize(db))
+--print("\n#############\n")
+--print(serialize(si))

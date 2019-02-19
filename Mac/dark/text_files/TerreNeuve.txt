@@ -26,22 +26,23 @@ Utilité
 
 Le terre-neuve fait partie des chiens de sauvetage à l'eau (avec le Landseer, tous les retrievers,  le Leonberg, le Berger polonais de Podhale, l'Hovawart, les bouviers suisses et tous les chiens d'eau  du 8e groupe, le Terrier noir russe, et le Saint-Bernard).
 
-Caractéristiques
-
+Informations structurées
 Silhouette	68 / 100 kg (mâle), 60 / 90 kg (femelle)
+
 Taille	    71 cm (mâle), 66 cm (femelle)
+
 Poil	    lisse, dense de texture assez grosse, il est double et résistant à l'eau
+
 Robe	    noir, marron ou noir et blanc
+
 Tête	    massive
+
 Yeux	    petits, bien écartés, de couleur marron foncé ou couleur noisette
+
 Oreilles	petites, attachées en arrière
+
 Queue	    large et puissante
+
 Caractère	doux, bienveillant, intelligent, digne, joyeux, têtu, calin, affectueux
-
-Nomenclature FCI
-
-* groupe 2
-    * section 2
-        * n° 50
 
 espérance de vie = 10-12 ans
