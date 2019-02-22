@@ -33,25 +33,33 @@ for k,v in pairs(db) do
 	table.insert(raceList, k)
 end
 
-sizeList = {"taille", "mesure", "hauteur", "cm", "m"}
-useList = {"utilisé", "utilité", "utilisation", "use", "emploi"}
-originList = {"origine", "vient", "où", "where", "pays", "région"}
-weightList = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "plus lourd"}
-compareList = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
+placeList = {}
+for k,v in pairs(db) do
+	table.insert(placeList, v.origin)
+	print(placeList[#placeList])
+end
 
+
+
+sizeLexicon = {"taille", "mesure", "hauteur", "cm", "m"}
+useLexicon = {"utilisé", "utilité", "utilite", "utilisation", "use", "emploi"}
+originLexicon = {"origine", "vient", "où", "where", "pays", "région"}
+weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "plus lourd"}
+compareLexicon = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
 
 qualifTaille = {"grand", "petit", "grande", "petite"}
 qualifPoids = {"léger", "lourd", "gros", "grosse"}
 
 pipe:lexicon("#race", raceList)
-pipe:lexicon("#size", sizeList)
-pipe:lexicon("#use", useList)
-pipe:lexicon("#origin", originList)
-pipe:lexicon("#weight", weightList)
-pipe:lexicon("#compare", compareList)
+pipe:lexicon("#size", sizeLexicon)
+pipe:lexicon("#use", useLexicon)
+pipe:lexicon("#origin", originLexicon)
+pipe:lexicon("#weight", weightLexicon)
+pipe:lexicon("#compare", compareLexicon)
 
 pipe:lexicon("#qualifTaille", qualifTaille)
 pipe:lexicon("#qualifPoids", qualifPoids)
+pipe:lexicon("#place", placeList)
 
 
 --TODO : ne pas vérifier chaque mot
@@ -66,7 +74,7 @@ function lev(line)
 
 	end --separating the user input into words
 
-	levCoef = 1
+	levCoef = 2
 
 	for _,word in pairs(words) do 
 		--print("\nDebug : len" .. string.len(word))
@@ -78,14 +86,13 @@ function lev(line)
 		--replace wrong words for the race etc
 		for _,correctWord in pairs(raceList) do
 				--print("Debug : go into correct race\n")
-
+				--print("Debug : " .. lev_iter(word, correctWord) .. ".\n")
 				if(lev_iter(word, correctWord) <= levCoef) then
-					--print("Debug : corrige\n")
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(sizeList) do
+		for _,correctWord in pairs(sizeLexicon) do
 				--print("Debug : go into correct size\n")
 
 
@@ -94,21 +101,21 @@ function lev(line)
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(useList) do
+		for _,correctWord in pairs(useLexicon) do
 
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(originList) do
+		for _,correctWord in pairs(originLexicon) do
 
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(weightList) do
+		for _,correctWord in pairs(weightLexicon) do
 
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
@@ -218,6 +225,7 @@ function parseUserAnswer() --with levenshtein distance
 	line = io.read()
 	line = string.lower(line) --démajusculer
 	line = line:gsub("%p", " %0 ") --putting spaces around punctuation signs
+	line = line:gsub(" %- ", "-")
 	line = lev(line)
 	return line
 
@@ -225,10 +233,37 @@ end
 
 
 function formatOrigin(str)
-	str = str:gsub("- ", "-")
-	
+	str = str:gsub(" %- ", "-")
     return (str:gsub("^%l", string.upper))
 end
+
+
+--Corentin
+function getDogFromLocation(location)
+
+	chiens = {}
+	str = ""
+	for k,v in pairs(db) do
+		if(v.origin == location) then
+			chiens[#chiens+1] = k	
+		end
+	end
+
+	if(#chiens == 0) then
+		print("\nInfochien : D'après notre base de données, aucun chien ne vient de cet endroit.\n")
+	else
+		str = "Les " .. chiens[1]
+		if(#chiens > 1) then
+			for u,v in pairs(chiens) do
+				str = str..", les ".. chiens[u]
+			end
+		end
+		str = str.." viennent de "..location .. "."
+	end
+
+	return str
+end
+
 
 
 --TODO
@@ -238,46 +273,47 @@ end
 --combien de chien de la même taille ?
 --je ne sais pas, je ne comprend pas, je n'ai pas l'info
 
---site de la prof
---des infos utiles sur le LUA
-
---revenir aux statuts
--- que les adhérents qui peuvent voter
--- à huis clos
--- fuck
-
 
 --read the user's input and answers accordingly
 function chatbotMain()
 	--print("-Debug: chatbotMain()\n")
-	print("Infochien : Bonjour je suis un chienbot ! Je peux parler du Beagle, du Labrador Retriever ou du Terre-Neuve.\n")
+	print("Infochien : Bonjour je suis un chienbot ! Je peux parler de beaucoup de chiens.\n")
 
 	local contextTable = { 
 		["race"] = {
 				value = false,
-				label = "la race"
+				label = "la race",
+				count = 0
 		},
 		["use"] = {
 				value = false,
-				label = "l'utilité"
+				label = "l'utilité",
+				count = 0
 		},
 		["size"] = {
 				value = false,
-				label = "la taille"
+				label = "la taille",
+				count = 0
 		},
 		["weight"] = {
 				value = false,
-				label = "le poids"
+				label = "le poids",
+				count = 0
 		},
 		["origin"] = {
 				value = false,
-				label = "l'origine"
+				label = "l'origine",
+				count = 0
+		},
+		["unknown"] = {
+				value = false,
+				label = "donnée inconnue",
+				count = 0
 		}
 	}
 
 
 	while 1 do
-
 
 		line = parseUserAnswer()
 
@@ -285,7 +321,7 @@ function chatbotMain()
 		currentAnswerHasMeaning = false
 
 		if line == "quitter" or line == "quit" or line == "q" then
-			break;
+			break
 		end
 
 		line = dark.sequence(line)
@@ -299,6 +335,21 @@ function chatbotMain()
 			pipe(previousLine)
 		end
 
+
+
+
+		--increment context : au bout de 3 questions, le context est reset
+
+		for k, v in pairs(contextTable) do
+			
+			if(contextTable[k].count >= 2) then
+				contextTable[k].count = 0
+				contextTable[k].value = false
+			else
+				contextTable[k].count = contextTable[k].count + 1
+			end
+		end
+
 		--print(dark.pipeline(line))
 		--print(line)
 
@@ -309,7 +360,7 @@ function chatbotMain()
 				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA) : OK !
 				-- donner une info complémentaire : pas ouf ?
 
-		--todo : reset le contexte quand on mentionne une race 
+		--todo : reset le contexte quand on mentionne une race = Non !
 
 		-- Trouver les tags des questions avec des moyens conventionnels
 		if (#line["#race"]) ~= 0 then
@@ -333,16 +384,18 @@ function chatbotMain()
 				end	
 
 				--labrador
-				if (stringRace == "labrador") then
-					stringRace = "labrador retriever"
-				elseif (previousRace == "labrador") then
-					previousRace = "labrador retriever"
-				end
+				--if (stringRace == "labrador") then
+				--	stringRace = "labrador retriever"
+				--elseif (previousRace == "labrador") then
+				--	previousRace = "labrador retriever"
+				--end
+
 				currentAnswerHasMeaning = true
 			end
 		end
 		if (#line["#use"]) ~= 0 then
 			contextTable["use"].value = true
+			contextTable["use"].count = 0
 
 			contextTable["size"].value = false
 			contextTable["origin"].value = false
@@ -351,6 +404,7 @@ function chatbotMain()
 		end
 		if (((#line["#size"]) ~= 0) or (#line["#qualifTaille"] ~= 0)) then
 			contextTable["size"].value = true
+			contextTable["size"].count = 0
 
 			contextTable["weight"].value = false
 			contextTable["origin"].value = false
@@ -359,6 +413,7 @@ function chatbotMain()
 		end
 		if (((#line["#weight"]) ~= 0) or (#line["#qualifPoids"] ~= 0)) then
 			contextTable["weight"].value = true
+			contextTable["weight"].count = 0
 
 			contextTable["size"].value = false
 			contextTable["origin"].value = false
@@ -367,14 +422,17 @@ function chatbotMain()
 		end
 		if (#line["#origin"]) ~= 0 then
 			contextTable["origin"].value = true
+			contextTable["origin"].count = 0
 
 			contextTable["weight"].value = false
 			contextTable["size"].value = false
 			contextTable["use"].value = false
 			currentAnswerHasMeaning = true
 		end
-		if (#line["#compare"]) ~= 0 then
-					
+		if (#line["#compare"]) ~= 0 then		
+			currentAnswerHasMeaning = true
+		end
+		if (#line["#place"]) ~= 0 then		
 			currentAnswerHasMeaning = true
 		end
 
@@ -390,12 +448,13 @@ function chatbotMain()
 		--
 
 		if(currentAnswerHasMeaning) then
+
 				---------------------------------
 				--is comparison
 				if((#line["#compare"]) ~= 0 ) then
 
 					--((#previousLine["#race"]) >= 1 or (#line["#race"]) >= 1)
-					if(   (contextTable["race"].value) and   stringRace ~= nil and previousRace ~= nil ) then
+					if(   (contextTable["race"].value) and stringRace ~= nil and previousRace ~= nil ) then
 
 						print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
 
@@ -416,7 +475,7 @@ function chatbotMain()
 									contextTable["origin"].value = false
 									contextTable["use"].value = false
 									currentAnswerHasMeaning = true
-
+									--print("Debug: comparons la taille\n")
 									
 							end
 							if (((#line["#weight"]) ~= 0) or (#line["#qualifPoids"] ~= 0)) then
@@ -425,6 +484,7 @@ function chatbotMain()
 									contextTable["origin"].value = false
 									contextTable["use"].value = false
 									currentAnswerHasMeaning = true
+									--print("Debug: comparons le poids\n")
 
 							end
 						end
@@ -436,9 +496,7 @@ function chatbotMain()
 
 					end
 					
-					
-					-------------------
-					
+					-------------------		
 					if(answer == "ouaf") then --comparaison entre deux chiens
 						
 					--print("\n Debug strragce le ".. stringRace .. " et le " .. previousRace .. ".")
@@ -521,19 +579,13 @@ function chatbotMain()
 									
 							--		print("Go jamais ici\n")
 
-
-
-								-----
-								---
-								---
-
 							else
 									--for k,context in pairs(contextTable) do
 									--	if (context.value) then
 									--		print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
 									--	end	
 									--end
-
+									--DEBUG : cette partie n'est jamais atteinte
 									print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
 									print("\nInfochien : Quelle information voulez-vous savoir ?\n")
 
@@ -562,9 +614,33 @@ function chatbotMain()
 							end
 
 						else
-							print("\nDebug : pas de race go mettre context svp")
-							--TODO il attend une réponse après, c'est pas normal ???
-							--line = "labrador retriever"
+							print("\nInfochien : Quels chiens voulez-vous comparer ?\n")
+
+							line = parseUserAnswer()
+							line = dark.sequence(line)
+							pipe(line)
+
+							if (#line["#race"]) ~= 0 then
+								contextTable["race"].value = true
+									if((#line["#race"]) == 2) then
+										--print("\nDEBUG first : 2 chiens")
+										stringRace = line:tag2str("#race")[1]
+										if(line:tag2str("#race")[1] ~= line:tag2str("#race")[2]) then
+											previousRace = line:tag2str("#race")[2]
+										end
+									
+									else --if((#line["#race"]) == 1) then
+										if(stringRace ~= line:tag2str("#race")[1]) then
+											previousRace = stringRace
+											stringRace = line:tag2str("#race")[1]
+										end
+									end	
+
+								
+								currentAnswerHasMeaning = true
+							end
+
+
 							--goto hasRaceContext
 
 
@@ -588,11 +664,7 @@ function chatbotMain()
 						else
 							print("\nDebig: Rien")
 						end
-
-
 					end
-				
-
 
 				---------------------------------
 				--is not comparison
@@ -602,6 +674,7 @@ function chatbotMain()
 						print("\nInfochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".\n")
 						hasAnswered = true
 
+					--tell size
 					elseif (contextTable["size"].value and contextTable["race"].value)then
 							if (db[stringRace].height ~= "de taille inconnue") then
 								print("\nInfochien : le " .. stringRace .. " est un chien " .. db[stringRace].height .. " (" .. db[stringRace].measure .. " cm).\n")
@@ -609,6 +682,8 @@ function chatbotMain()
 								print("\nInfochien : le " .. stringRace .. " est un chien de " .. db[stringRace].measure .. " cm.\n")
 							end
 							hasAnswered = true
+
+					--tell use
 					elseif (contextTable["use"].value and contextTable["race"].value)then
 									
 							io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
@@ -634,11 +709,19 @@ function chatbotMain()
 					elseif (contextTable["weight"].value and contextTable["race"].value) then
 							print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.\n")
 							hasAnswered = true
-							--set context weight to false here
+							--set context weight to false here ? TODO ?
+
+
+
+					elseif (#line["#place"] ~= 0) then
+							print("\nInfochien : " .. getDogFromLocation(line:tag2str("#place")[1]) .. "\n" )
+							
 					elseif (contextTable["origin"].value and contextTable["race"].value) then	
+
 							origin = formatOrigin(db[stringRace].origin)				
 							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. origin .. ".\n")
 							hasAnswered = true
+
 					elseif (contextTable["race"].value) then
 						if(previousRace ~= nil) then
 							print("\nInfochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".\n")
@@ -646,7 +729,7 @@ function chatbotMain()
 							print("\nInfochien : Parlons du " .. stringRace .. ".\n")
 						end
 
-						--????? je l'ai pas mis pour une raison mais on va le laisser
+						--je l'ai pas mis pour une raison mais on va le laisser
 						hasAnswered = true
 
 					else

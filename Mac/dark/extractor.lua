@@ -129,8 +129,22 @@ for filename in os.dir(".") do
 	fillingMissingValues(race, db, si)
 end
 
+
+
+
 local statistics = compareWeight(db, si)
 statistics = compareHeight(db, si, statistics)
+
+for u,v in pairs(db) do
+	i = string.find(u, " %- ")
+	if(i ~= NIL) then
+		name = u:gsub(" %- ", "-")
+		db[name] = db[u]
+		db[u] = NIL
+	end
+end
+
+
 --print(serialize(statistics))
 
 --print(serialize(db))
