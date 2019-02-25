@@ -4,7 +4,8 @@ Bonjour ! Peux-tu me donner une liste de tous les chiens que tu connais ?
 
 Infochien : Bonjour !
 Infochien : Voici la liste de tous les chiens de la base de donnée :
-Les samoyède, samoyède, bichon maltais, dalmatien, chow-chow, labrador retriever, lévrier afghan, epagneul breton, bouledogue, terre-neuve, spitz allemand, berger allemand, terrier écossais, beagle, akita, lapphund suédois, golden retriever, dogue de bordeaux, chien de berger islandais sont dans la base de donnée.
+Le dalmatien, le akita, le golden retriever, le bouledogue, le epagneul breton, le chien de berger islandais, le samoyède, le lévrier afghan, le chow-chow, le bichon maltais, le terre-neuve, le lapphund suédois, le beagle, le spitz allemand, le labrador retriever, le berger allemand, le terrier écossais, le dogue de bordeaux sont dans la base de donnée.
+
 
 Infochien : Des questions ?
 
@@ -33,6 +34,11 @@ et sa taille ?
 Infochien : Le samoyède est un chien de taille moyenne (57 cm).
 Infochien : Voulez-vous en savoir plus ?
 
+et son origine ?
+
+Infochien : L'origine du samoyède est : Russie européenne.
+Infochien : Des questions sur les chiens ?
+
 Quel est le plus grand chien entre le beagle et le samoyède ?
 
 Infochien : Comparons le beagle et le samoyède.
@@ -55,3 +61,60 @@ ouaf ouaf
 
 Infochien : Le chien le plus gros de la BD est le dogue de bordeaux.
 Infochien : Quoi d'autre ?
+
+
+Quel est le plus gros, entre le dogue de bordeaux et le dalmatien ?
+
+Infochien : Comparons le dogue de bordeaux et le dalmatien.
+Infochien : Le dogue de bordeaux (80 kg) est plus lourd que le dalmatien (32 kg).
+Infochien : Je sais tout sur les chiens !
+
+d'où vient le labrador retriever ?
+
+Infochien : L'origine du labrador retriever est : Royaume-uni.
+Infochien : Voulez-vous en savoir plus ?
+
+et le golden retriever ?
+
+Infochien : L'origine du golden retriever est : Britannique.
+Infochien : Quoi d'autre ?
+
+Quels sont les chiens provenant d'Allemagne ?
+
+Infochien : Les berger allemand, les spitz allemand viennent d'Allemagne.
+Infochien : Des questions sur les chiens ?
+
+et du Japon ?
+
+Infochien : Les akita viennent de Japon.
+Infochien : Voulez-vous des informations sur les chiens ?
+
+
+
+
+
+
+
+
+--------
+Pays possibles : 
+russie européenne
+angleterre
+islande
+mongolie
+royaume - uni
+française
+dalmatie
+allemagne
+inconnue
+île canadienne de terre - neuve
+inconnue
+afghanistan
+allemagne
+britannique
+suède
+bretagne
+ecosse
+japon
+
+

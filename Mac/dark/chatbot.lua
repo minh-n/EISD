@@ -43,7 +43,7 @@ end
 helloLexicon = {"bonjour", "salut", "henlo", "yo"}
 sizeLexicon = {"taille", "mesure", "hauteur", "cm", "m"}
 useLexicon = {"utilisé", "utilité", "utilisation", "use", "emploi"}
-originLexicon = {"origine", "vient", "où", "where", "pays", "région"}
+originLexicon = {"origine", "vient", "where", "pays", "région"}
 weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "lourd"}
 compareLexicon = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
 listLexicon = {"liste", "lister", "tous"}
@@ -109,13 +109,13 @@ function lev(line)
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(originLexicon) do
-
-				if(lev_iter(word, correctWord) <= levCoef) then
-					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
-					goto endOfNestedFor -- double break to avoid checking a word twice
-				end
-		end
+--		for _,correctWord in pairs(originLexicon) do
+--
+--				if(lev_iter(word, correctWord) <= levCoef) then
+--					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
+--					goto endOfNestedFor -- double break to avoid checking a word twice
+--				end
+--		end
 		for _,correctWord in pairs(weightLexicon) do
 
 				if(lev_iter(word, correctWord) <= levCoef) then
@@ -312,8 +312,8 @@ end
 --Optimiser levenshtein
 --Quel autre chien a la même origine ?
 --combien de chien de la même taille ?
---je ne sais pas, je ne comprend pas, je n'ai pas l'info
---BONJOUR
+--je ne sais pas, je ne comprend pas, je n'ai pas l'info : ok
+--BONJOUR : ok
 
 --read the user's input and answers accordingly
 function chatbotMain()
@@ -393,9 +393,11 @@ function chatbotMain()
 				chiens[#chiens+1] = k	
 			end
 
-			str = "Les " .. chiens[1]
+			str = "Le " .. chiens[1]
 			for k,v in pairs(chiens) do
-				str = str..", ".. chiens[k]
+				if (v ~= chiens[1]) then
+					str = str..", le ".. chiens[k]
+				end
 			end
 			str = str .. " sont dans la base de donnée.\n"
 			print(str)
@@ -406,7 +408,7 @@ function chatbotMain()
 
 		for k, v in pairs(contextTable) do
 			
-			if(contextTable[k].count >= 2) then
+			if(contextTable[k].count >= 3) then
 				contextTable[k].count = 0
 				contextTable[k].value = false
 			else
