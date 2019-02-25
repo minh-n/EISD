@@ -6,15 +6,15 @@ local lev_iter = (require 'levenshtein').lev_iter
 math.randomseed(os.time())
 
 otherAnswer={
-		"voulez-vous en savoir plus ?",
-		"voulez-vous d'autres informations sur les chiens ?",
-		"quelque chose d'autre ?",
-		"d'autres questions sur les chiens ?",
-		"d'autres questions ?",
-		"quoi d'autre ?",
-		"ouaf.",
-		"je sais tout sur les chiens !",
-		"demandez-moi quelque chose d'autre si vous le souhaitez.",
+		"Voulez-vous en savoir plus ?",
+		"Voulez-vous des informations sur les chiens ?",
+		"Quelque chose d'autre ?",
+		"Des questions sur les chiens ?",
+		"Des questions ?",
+		"Quoi d'autre ?",
+		"Ouaf.",
+		"Je sais tout sur les chiens !",
+		"Demandez-moi quelque chose d'autre si vous le souhaitez.",
 }
 
 
@@ -36,20 +36,22 @@ end
 placeList = {}
 for k,v in pairs(db) do
 	table.insert(placeList, v.origin)
-	print(placeList[#placeList])
+	--print(placeList[#placeList])
 end
 
 
-
+helloLexicon = {"bonjour", "salut", "henlo", "yo"}
 sizeLexicon = {"taille", "mesure", "hauteur", "cm", "m"}
-useLexicon = {"utilisé", "utilité", "utilite", "utilisation", "use", "emploi"}
+useLexicon = {"utilisé", "utilité", "utilisation", "use", "emploi"}
 originLexicon = {"origine", "vient", "où", "where", "pays", "région"}
-weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "plus lourd"}
+weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "lourd"}
 compareLexicon = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
+listLexicon = {"liste", "lister", "tous"}
 
 qualifTaille = {"grand", "petit", "grande", "petite"}
 qualifPoids = {"léger", "lourd", "gros", "grosse"}
 
+pipe:lexicon("#hello", helloLexicon)
 pipe:lexicon("#race", raceList)
 pipe:lexicon("#size", sizeLexicon)
 pipe:lexicon("#use", useLexicon)
@@ -60,10 +62,9 @@ pipe:lexicon("#compare", compareLexicon)
 pipe:lexicon("#qualifTaille", qualifTaille)
 pipe:lexicon("#qualifPoids", qualifPoids)
 pipe:lexicon("#place", placeList)
+pipe:lexicon("#list", listLexicon)
 
 
---TODO : ne pas vérifier chaque mot
--- pattern de question
 --replaces correct words in the user input string 
 function lev(line)
 	words = {}
@@ -122,11 +123,27 @@ function lev(line)
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
+		for _,correctWord in pairs(placeList) do
+
+				if(lev_iter(word, correctWord) <= levCoef) then
+					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
+					goto endOfNestedFor -- double break to avoid checking a word twice
+				end
+		end
 
 		::endOfNestedFor:: 
 	end
 
+	--TODO : ne pas vérifier chaque mot mais pattern de question ? Approche statistique
+
 	return line
+end
+
+
+function lev2()
+
+	print("Todo")
+
 end
 
 
@@ -192,15 +209,16 @@ function getBiggestDog()
 	return biggestDog
 end
 
---TODO : Comparaison poids
+--Comparaison poids
 function getHeaviestDog()
 	heaviestDog = ""
 	biggestWeight = 0
 
 	for k,v in pairs(db) do
-		if(v.Weight > biggestWeight) then
+		if(v.weight > biggestWeight) then
+
 			heaviestDog = k
-			biggestWeight =  v.Weight
+			biggestWeight = v.weight
 		end
 	end
 
@@ -213,10 +231,11 @@ function getUserAnswer()
 	ans = io.read()
 	ans = string.lower(ans) --démajusculer
 	--putting spaces around punctuation signs
+
+	ans = ans:gsub("é", "e") 
 	ans = ans:gsub("%p", " %0 ") --on met des espaces sur la ponctuation
 
 	return ans
-
 end
 
 
@@ -228,17 +247,23 @@ function parseUserAnswer() --with levenshtein distance
 	line = line:gsub(" %- ", "-")
 	line = lev(line)
 	return line
-
 end
 
-
+-- removes spaces around "-", and replace the first letter with its uppercase version 
 function formatOrigin(str)
 	str = str:gsub(" %- ", "-")
     return (str:gsub("^%l", string.upper))
 end
 
+--return true if the first letter of str is a vowel
+function isVoyelle(str)
+	if((string.sub(str, 1, 1) == "a") or (string.sub(str, 1, 1) == "i") or (string.sub(str, 1, 1) == "u") or (string.sub(str, 1, 1) == "e") or (string.sub(str, 1, 1) == "o")) then
+		return true
+	else
+		return false
+	end
+end
 
---Corentin
 function getDogFromLocation(location)
 
 	chiens = {}
@@ -250,15 +275,31 @@ function getDogFromLocation(location)
 	end
 
 	if(#chiens == 0) then
-		print("\nInfochien : D'après notre base de données, aucun chien ne vient de cet endroit.\n")
+		print("Infochien : D'après notre base de données, aucun chien ne vient de cet endroit.")
 	else
-		str = "Les " .. chiens[1]
 		if(#chiens > 1) then
-			for u,v in pairs(chiens) do
-				str = str..", les ".. chiens[u]
+			str = "Les " .. chiens[1]
+			for k,v in pairs(chiens) do
+				if (v ~= chiens[1]) then
+					str = str..", les ".. chiens[k]
+				end
 			end
+		
+		else
+			str = "Les " .. chiens[1]
+
 		end
-		str = str.." viennent de "..location .. "."
+
+		if (isVoyelle(string.sub(location, 1, 1))) then
+			location = location:gsub("^%l", string.upper)
+			str = str.." viennent d'"..location .. "."
+		else
+			location = location:gsub("^%l", string.upper)
+			str = str.." viennent de "..location .. "."
+
+		end
+
+
 	end
 
 	return str
@@ -272,7 +313,7 @@ end
 --Quel autre chien a la même origine ?
 --combien de chien de la même taille ?
 --je ne sais pas, je ne comprend pas, je n'ai pas l'info
-
+--BONJOUR
 
 --read the user's input and answers accordingly
 function chatbotMain()
@@ -326,7 +367,8 @@ function chatbotMain()
 
 		line = dark.sequence(line)
 		pipe(line)
-		
+		print("") --saut de ligne entre la question de l'user et la reponse
+
 		if(line ~= nil) then
 			previousLine = line
 		else
@@ -335,8 +377,30 @@ function chatbotMain()
 			pipe(previousLine)
 		end
 
+		if (#line["#hello"]) ~= 0 then
+			print("Infochien : Bonjour !")
+			hasAnswered = true
+			currentAnswerHasMeaning = true
+		end
 
 
+		if (#line["#list"]) ~= 0 then
+			print("Infochien : Voici la liste de tous les chiens de la base de donnée :")
+			
+			chiens = {}
+
+			for k,v in pairs(db) do
+				chiens[#chiens+1] = k	
+			end
+
+			str = "Les " .. chiens[1]
+			for k,v in pairs(chiens) do
+				str = str..", ".. chiens[k]
+			end
+			str = str .. " sont dans la base de donnée.\n"
+			print(str)
+			hasAnswered = true
+		end
 
 		--increment context : au bout de 3 questions, le context est reset
 
@@ -435,7 +499,14 @@ function chatbotMain()
 		if (#line["#place"]) ~= 0 then		
 			currentAnswerHasMeaning = true
 		end
-
+		if (#line["#list"]) ~= 0 then		
+			contextTable["origin"].value = false
+			contextTable["weight"].value = false
+			contextTable["size"].value = false
+			contextTable["use"].value = false
+			contextTable["race"].value = false
+			currentAnswerHasMeaning = true
+		end
 		--Trouver les tags avec la distance de Levenshtein
 
 
@@ -456,13 +527,13 @@ function chatbotMain()
 					--((#previousLine["#race"]) >= 1 or (#line["#race"]) >= 1)
 					if(   (contextTable["race"].value) and stringRace ~= nil and previousRace ~= nil ) then
 
-						print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
+						print("Infochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
 
-						--print("\nDebug : contextSize = " )
+						--print("Debug : contextSize = " )
 						--print(contextTable["size"].value )
 
 						if(contextTable["size"].value == false and contextTable["weight"].value == false) then
-							print("\nInfochien : Quelle information voulez-vous comparer (taille ou poids) ?\n")
+							print("Infochien : Quelle information voulez-vous comparer (taille ou poids) ?\n")
 
 							--user input, telling what info to compare----------------
 							line = parseUserAnswer()
@@ -490,7 +561,7 @@ function chatbotMain()
 						end
 						answer = "ouaf"
 					else
-						print("\nInfochien : voulez-vous comparer deux chiens (dites 'ouaf'), ou faire une comparaison absolue (dites 'ouaf ouaf') ? ")
+						print("Infochien : Voulez-vous comparer deux chiens (dites 'ouaf'), ou faire une comparaison absolue (dites 'ouaf ouaf') ?\n")
 						answer = getUserAnswer()
 						answer = answer:gsub(" ", "")
 
@@ -529,11 +600,11 @@ function chatbotMain()
 							end	
 
 								--labrador
-							if (stringRace == "labrador") then
-								stringRace = "labrador retriever"
-							elseif (previousRace == "labrador") then
-								previousRace = "labrador retriever"
-							end
+							--if (stringRace == "labrador") then
+							--	stringRace = "labrador retriever"
+							--elseif (previousRace == "labrador") then
+							--	previousRace = "labrador retriever"
+							--end
 							currentAnswerHasMeaning = true
 						end
 
@@ -549,9 +620,9 @@ function chatbotMain()
 									previousSize = db[previousRace].measure
 
 									if(db[stringRace].measure > db[previousRace].measure) then
-										print("\nInfochien : le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").\n")
+										print("Infochien : Le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").")
 									else
-										print("\nInfochien : le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").\n")
+										print("Infochien : Le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").")
 									end
 
 									hasAnswered = true
@@ -562,9 +633,9 @@ function chatbotMain()
 									previousWeight = db[previousRace].weight
 
 									if(dogWeight > previousWeight) then
-										print("\nInfochien : le " .. stringRace .. " (" .. dogWeight .. " kg) est plus lourd que le " .. previousRace .. " (" .. previousWeight .." kg).\n")
+										print("Infochien : Le " .. stringRace .. " (" .. dogWeight .. " kg) est plus lourd que le " .. previousRace .. " (" .. previousWeight .." kg).")
 									else
-										print("\nInfochien : le " .. previousRace .. " (" .. previousWeight .. " kg) est plus lourd que le " .. stringRace .. " (" .. dogWeight .." kg).\n")
+										print("Infochien : Le " .. previousRace .. " (" .. previousWeight .. " kg) est plus lourd que le " .. stringRace .. " (" .. dogWeight .." kg).")
 									end
 
 									hasAnswered = true
@@ -572,7 +643,7 @@ function chatbotMain()
 							elseif (contextTable["origin"].value and contextTable["race"].value) then			
 
 									origin = formatOrigin(db[stringRace].origin)
-									print("\nInfochien : l'origine du " .. stringRace .. " est : " .. origin .. ".")
+									print("\nInfochien : L'origine du " .. stringRace .. " est : " .. origin .. ".")
 									hasAnswered = true
 
 							--elseif (contextTable["race"].value) then
@@ -614,7 +685,7 @@ function chatbotMain()
 							end
 
 						else
-							print("\nInfochien : Quels chiens voulez-vous comparer ?\n")
+							print("Infochien : Quels chiens voulez-vous comparer ?\n")
 
 							line = parseUserAnswer()
 							line = dark.sequence(line)
@@ -639,10 +710,7 @@ function chatbotMain()
 								
 								currentAnswerHasMeaning = true
 							end
-
-
 							--goto hasRaceContext
-
 
 							hasAnswered = true
 						end
@@ -653,16 +721,15 @@ function chatbotMain()
 
 							biggestDog = getBiggestDog()
 							--if(line:tag2str("#size")[1] == "grand") then
-							print("\nInfochien : le chien le plus grand de la BD est le " .. biggestDog .. ".\n")
-							
-							--else line.contains(petit)
-								-- le chien le plus petit
-							--end
-
-								hasAnswered = true
-						
+							print("Infochien : Le chien le plus grand de la BD est le " .. biggestDog .. ".")
+							hasAnswered = true
+						elseif ((#line["#qualifPoids"]) ~= 0)then
+							heaviestDog = getHeaviestDog()
+							--if(line:tag2str("#size")[1] == "grand") then
+							print("Infochien : Le chien le plus gros de la BD est le " .. heaviestDog .. ".")
+							hasAnswered = true
 						else
-							print("\nDebig: Rien")
+							print("Debug: Rien")
 						end
 					end
 
@@ -671,22 +738,22 @@ function chatbotMain()
 				else
 					if (#line["#race"] == 2) then
 
-						print("\nInfochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".\n")
+						print("Infochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".")
 						hasAnswered = true
 
 					--tell size
 					elseif (contextTable["size"].value and contextTable["race"].value)then
 							if (db[stringRace].height ~= "de taille inconnue") then
-								print("\nInfochien : le " .. stringRace .. " est un chien " .. db[stringRace].height .. " (" .. db[stringRace].measure .. " cm).\n")
+								print("Infochien : Le " .. stringRace .. " est un chien " .. db[stringRace].height .. " (" .. db[stringRace].measure .. " cm).")
 							else
-								print("\nInfochien : le " .. stringRace .. " est un chien de " .. db[stringRace].measure .. " cm.\n")
+								print("Infochien : Le " .. stringRace .. " est un chien de " .. db[stringRace].measure .. " cm.")
 							end
 							hasAnswered = true
 
 					--tell use
 					elseif (contextTable["use"].value and contextTable["race"].value)then
 									
-							io.write("\nInfochien : l'utilisation du " .. stringRace .. " est ")
+							io.write("Infochien : L'utilisation du " .. stringRace .. " est ")
 								 
 							-- For every item in the list, including correct use of comma
 							for useCount = 1, #db[stringRace].use do
@@ -694,7 +761,7 @@ function chatbotMain()
 									displayUse = db[stringRace].use[useCount]
 									displayUse = displayUse:gsub(" \' ", "\'")
 									if(useCount == #db[stringRace].use) then
-											io.write("et " .. displayUse .. ".\n")
+											io.write("et " .. displayUse .. ".")
 
 									elseif (useCount == #db[stringRace].use-1) then
 
@@ -707,26 +774,27 @@ function chatbotMain()
 							io.write("\n")
 							hasAnswered = true
 					elseif (contextTable["weight"].value and contextTable["race"].value) then
-							print("\nInfochien : le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.\n")
+							print("Infochien : Le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
 							hasAnswered = true
 							--set context weight to false here ? TODO ?
 
 
 
 					elseif (#line["#place"] ~= 0) then
-							print("\nInfochien : " .. getDogFromLocation(line:tag2str("#place")[1]) .. "\n" )
-							
+							print("Infochien : " .. getDogFromLocation(line:tag2str("#place")[1]) .. "" )
+							hasAnswered = true
+
 					elseif (contextTable["origin"].value and contextTable["race"].value) then	
 
 							origin = formatOrigin(db[stringRace].origin)				
-							print("\nInfochien : l'origine du " .. stringRace .. " est : " .. origin .. ".\n")
+							print("Infochien : L'origine du " .. stringRace .. " est : " .. origin .. ".")
 							hasAnswered = true
 
 					elseif (contextTable["race"].value) then
 						if(previousRace ~= nil) then
-							print("\nInfochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".\n")
+							print("Infochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".")
 						else
-							print("\nInfochien : Parlons du " .. stringRace .. ".\n")
+							print("Infochien : Parlons du " .. stringRace .. ".")
 						end
 
 						--je l'ai pas mis pour une raison mais on va le laisser
@@ -735,7 +803,7 @@ function chatbotMain()
 					else
 						for k,context in pairs(contextTable) do
 							if (context.value) then
-								print("\nInfochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
+								print("Infochien : De quel chien voulez-vous savoir " .. context.label .. " ?\n")
 							end	
 						end
 					end
@@ -745,13 +813,12 @@ function chatbotMain()
 		-- Else: HAS NO MEANING
 		--
 		else
-				print("Infochien : Je n'ai pas compris la question. Pouvez-vous reformuler s'il-vous-plait ?\n")
-				hasAnswered = false
+			print("Infochien : Je n'ai pas compris la question. Pouvez-vous reformuler s'il-vous-plait ?\n")
+			hasAnswered = false
 		end
 		if (hasAnswered == true) then
-
-				io.write("Infochien : " .. otherAnswer[math.random(#otherAnswer)] .. "\n\n")
-				hasAnswered = false
+			io.write("Infochien : " .. otherAnswer[math.random(#otherAnswer)] .. "\n\n")
+			hasAnswered = false
 		end
 
 	end
