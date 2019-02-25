@@ -414,9 +414,6 @@ function chatbotMain()
 			end
 		end
 
-		--print(dark.pipeline(line))
-		--print(line)
-
 		-- TODO : gestion du contexte en mieux
 				-- stocker le chien précédent : OK !
 				-- les accents : hmm...
@@ -510,14 +507,10 @@ function chatbotMain()
 		--Trouver les tags avec la distance de Levenshtein
 
 
-
-
 		-- génération du dialogue
 
 		--
 		-- HAS MEANING
-		--
-
 		if(currentAnswerHasMeaning) then
 
 				---------------------------------
@@ -556,7 +549,6 @@ function chatbotMain()
 									contextTable["use"].value = false
 									currentAnswerHasMeaning = true
 									--print("Debug: comparons le poids\n")
-
 							end
 						end
 						answer = "ouaf"
@@ -632,7 +624,9 @@ function chatbotMain()
 									dogWeight = db[stringRace].weight
 									previousWeight = db[previousRace].weight
 
-									if(dogWeight > previousWeight) then
+									if(dogWeight == 0 or previousWeight == 0) then
+										print("Infochien : Je n'ai pas cette information.")
+									elseif(dogWeight > previousWeight) then
 										print("Infochien : Le " .. stringRace .. " (" .. dogWeight .. " kg) est plus lourd que le " .. previousRace .. " (" .. previousWeight .." kg).")
 									else
 										print("Infochien : Le " .. previousRace .. " (" .. previousWeight .. " kg) est plus lourd que le " .. stringRace .. " (" .. dogWeight .." kg).")
@@ -774,11 +768,14 @@ function chatbotMain()
 							io.write("\n")
 							hasAnswered = true
 					elseif (contextTable["weight"].value and contextTable["race"].value) then
+
+						if(db[stringRace].weight == 0 ) then
+							print("Infochien : Désolé, mais je n'ai pas cette information.")
+						else
 							print("Infochien : Le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
-							hasAnswered = true
+						end	
+						hasAnswered = true
 							--set context weight to false here ? TODO ?
-
-
 
 					elseif (#line["#place"] ~= 0) then
 							print("Infochien : " .. getDogFromLocation(line:tag2str("#place")[1]) .. "" )
@@ -811,7 +808,6 @@ function chatbotMain()
 
 		--
 		-- Else: HAS NO MEANING
-		--
 		else
 			print("Infochien : Je n'ai pas compris la question. Pouvez-vous reformuler s'il-vous-plait ?\n")
 			hasAnswered = false
@@ -820,16 +816,10 @@ function chatbotMain()
 			io.write("Infochien : " .. otherAnswer[math.random(#otherAnswer)] .. "\n\n")
 			hasAnswered = false
 		end
-
-	end
-
-	
+	end	
 end
 
 
-
 -- Main
-
 --print("-Debug: Main\n")
-
 chatbotMain()
