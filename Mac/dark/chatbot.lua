@@ -42,14 +42,14 @@ end
 
 helloLexicon = {"bonjour", "salut", "henlo", "yo"}
 sizeLexicon = {"taille", "mesure", "hauteur", "cm", "m"}
-useLexicon = {"utilisé", "utilité", "utilisation", "use", "emploi"}
+useLexicon = {"utilise", "utilite", "utilisation", "use", "emploi"}
 originLexicon = {"origine", "vient", "where", "pays", "région"}
-weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes", "lourd"}
+weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes"}
 compareLexicon = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
 listLexicon = {"liste", "lister", "tous"}
 
 qualifTaille = {"grand", "petit", "grande", "petite"}
-qualifPoids = {"léger", "lourd", "gros", "grosse"}
+qualifPoids = {"leger", "lourd", "gros", "grosse"}
 
 pipe:lexicon("#hello", helloLexicon)
 pipe:lexicon("#race", raceList)
@@ -191,7 +191,7 @@ function convertWordIntoWeight(line)
 	return size
 end
 
---Comparaison taille
+--Comparaison taille : le plus grand
 function getBiggestDog()
 	biggestDog = ""
 	biggestHeight = 0
@@ -209,7 +209,26 @@ function getBiggestDog()
 	return biggestDog
 end
 
---Comparaison poids
+
+--Comparaison taille : le plus petit
+function getSmallestDog()
+	smallestDog = ""
+	smallestHeight = 100
+
+	for k,v in pairs(db) do
+
+		currentHeight = v.measure
+
+		if ( (currentHeight < smallestHeight) and (currentHeight ~=0) )then
+			smallestDog = k --print("smallestDog = "..k)
+			smallestHeight = currentHeight
+		end
+	end
+
+	return smallestDog
+end
+
+--Comparaison poids : le plus lourd
 function getHeaviestDog()
 	heaviestDog = ""
 	biggestWeight = 0
@@ -225,6 +244,21 @@ function getHeaviestDog()
 	return heaviestDog
 end
 
+--Comparaison poids : le plus léger
+function getLightestDog()
+	lightestDog = ""
+	lightestWeight = 100
+
+	for k,v in pairs(db) do
+		if(v.weight < lightestWeight and (v.weight ~=0) ) then
+
+			lightestDog = k
+			lightestWeight = v.weight
+		end
+	end
+
+	return lightestDog
+end
 
 function getUserAnswer()
 
@@ -243,6 +277,7 @@ function parseUserAnswer() --with levenshtein distance
 
 	line = io.read()
 	line = string.lower(line) --démajusculer
+	line = line:gsub("é", "e") 
 	line = line:gsub("%p", " %0 ") --putting spaces around punctuation signs
 	line = line:gsub(" %- ", "-")
 	line = lev(line)
@@ -314,6 +349,14 @@ end
 --combien de chien de la même taille ?
 --je ne sais pas, je ne comprend pas, je n'ai pas l'info : ok
 --BONJOUR : ok
+-- TODO : gestion du contexte en mieux
+				-- stocker le chien précédent : OK !
+				-- les accents : hmm...
+				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles : pas ouf en vrai
+				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA) : OK !
+				-- donner une info complémentaire : pas ouf ?
+
+		--todo : reset le contexte quand on mentionne une race = Non !
 
 --read the user's input and answers accordingly
 function chatbotMain()
@@ -362,6 +405,7 @@ function chatbotMain()
 		currentAnswerHasMeaning = false
 
 		if line == "quitter" or line == "quit" or line == "q" then
+			print("Infochien : Au revoir ! Ouaf !\n")
 			break
 		end
 
@@ -405,41 +449,39 @@ function chatbotMain()
 		end
 
 		--increment context : au bout de 3 questions, le context est reset
-
 		for k, v in pairs(contextTable) do
 			
 			if(contextTable[k].count >= 3) then
 				contextTable[k].count = 0
 				contextTable[k].value = false
+				
+				if(k == "race") then
+					previousRace = nil
+					currentRace = nil
+				end
 			else
 				contextTable[k].count = contextTable[k].count + 1
 			end
 		end
 
-		-- TODO : gestion du contexte en mieux
-				-- stocker le chien précédent : OK !
-				-- les accents : hmm...
-				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles : pas ouf en vrai
-				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA) : OK !
-				-- donner une info complémentaire : pas ouf ?
-
-		--todo : reset le contexte quand on mentionne une race = Non !
-
+		
 		-- Trouver les tags des questions avec des moyens conventionnels
 		if (#line["#race"]) ~= 0 then
 			if (#line["#race"]) ~= 0 then
 				contextTable["race"].value = true
+				contextTable["race"].count = 0
+
 				if((#line["#race"]) == 2) then
 					--print("\nDEBUG first : 2 chiens")
-					stringRace = line:tag2str("#race")[1]
+					currentRace = line:tag2str("#race")[1]
 					if(line:tag2str("#race")[1] ~= line:tag2str("#race")[2]) then
 						previousRace = line:tag2str("#race")[2]
 					end
 				
 				else --if((#line["#race"]) == 1) then
-					if(stringRace ~= line:tag2str("#race")[1]) then
-						previousRace = stringRace
-						stringRace = line:tag2str("#race")[1]
+					if(currentRace ~= line:tag2str("#race")[1]) then
+						previousRace = currentRace
+						currentRace = line:tag2str("#race")[1]
 					end
 					--if(previousRace ~= nil) then
 						--print("\nDEBUG first : 1 chien previousRace= ".. previousRace )
@@ -447,8 +489,8 @@ function chatbotMain()
 				end	
 
 				--labrador
-				--if (stringRace == "labrador") then
-				--	stringRace = "labrador retriever"
+				--if (currentRace == "labrador") then
+				--	currentRace = "labrador retriever"
 				--elseif (previousRace == "labrador") then
 				--	previousRace = "labrador retriever"
 				--end
@@ -520,9 +562,9 @@ function chatbotMain()
 				if((#line["#compare"]) ~= 0 ) then
 
 					--((#previousLine["#race"]) >= 1 or (#line["#race"]) >= 1)
-					if(   (contextTable["race"].value) and stringRace ~= nil and previousRace ~= nil ) then
+					if(   (contextTable["race"].value) and currentRace ~= nil and previousRace ~= nil ) then
 
-						print("Infochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
+						print("Infochien : Comparons le ".. currentRace .. " et le " .. previousRace .. ".")
 
 						--print("Debug : contextSize = " )
 						--print(contextTable["size"].value )
@@ -558,44 +600,46 @@ function chatbotMain()
 						print("Infochien : Voulez-vous comparer deux chiens (dites 'ouaf'), ou faire une comparaison absolue (dites 'ouaf ouaf') ?\n")
 						answer = getUserAnswer()
 						answer = answer:gsub(" ", "")
+						print("")
 
 					end
 					
 					-------------------		
 					if(answer == "ouaf") then --comparaison entre deux chiens
 						
-					--print("\n Debug strragce le ".. stringRace .. " et le " .. previousRace .. ".")
+					--print("\n Debug strragce le ".. currentRace .. " et le " .. previousRace .. ".")
 
 						--GET RACE
-						if(stringRace == nil or previousRace == nil) then
+						if(currentRace == nil or previousRace == nil) then
 							print("\nInfochien : Quels chiens voulez-vous comparer ?\n")
 
 							line = parseUserAnswer()
 							line = dark.sequence(line)
 							pipe(line)
 
+							print("")
 							if (#line["#race"]) ~= 0 then
-							contextTable["race"].value = true
-							if((#line["#race"]) == 2) then
-								--print("\nDEBUG first : 2 chiens")
-								stringRace = line:tag2str("#race")[1]
-								if(line:tag2str("#race")[1] ~= line:tag2str("#race")[2]) then
-									previousRace = line:tag2str("#race")[2]
-								end
-							
-							else --if((#line["#race"]) == 1) then
-								if(stringRace ~= line:tag2str("#race")[1]) then
-									previousRace = stringRace
-									stringRace = line:tag2str("#race")[1]
-								end
-								--if(previousRace ~= nil) then
-									--print("\nDEBUG first : 1 chien previousRace= ".. previousRace )
-								--end
-							end	
+								contextTable["race"].value = true
+								if((#line["#race"]) == 2) then
+									--print("\nDEBUG first : 2 chiens")
+									currentRace = line:tag2str("#race")[1]
+									if(line:tag2str("#race")[1] ~= line:tag2str("#race")[2]) then
+										previousRace = line:tag2str("#race")[2]
+									end
+								
+								else --if((#line["#race"]) == 1) then
+									if(currentRace ~= line:tag2str("#race")[1]) then
+										previousRace = currentRace
+										currentRace = line:tag2str("#race")[1]
+									end
+									--if(previousRace ~= nil) then
+										--print("\nDEBUG first : 1 chien previousRace= ".. previousRace )
+									--end
+								end	
 
 								--labrador
-							--if (stringRace == "labrador") then
-							--	stringRace = "labrador retriever"
+							--if (currentRace == "labrador") then
+							--	currentRace = "labrador retriever"
 							--elseif (previousRace == "labrador") then
 							--	previousRace = "labrador retriever"
 							--end
@@ -610,36 +654,36 @@ function chatbotMain()
 						if(previousRace ~= nil) then
 							if (contextTable["size"].value and contextTable["race"].value)then
 
-									dogSize = db[stringRace].measure
+									dogSize = db[currentRace].measure
 									previousSize = db[previousRace].measure
 
-									if(db[stringRace].measure > db[previousRace].measure) then
-										print("Infochien : Le " .. stringRace .. " (" .. db[stringRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").")
+									if(db[currentRace].measure > db[previousRace].measure) then
+										print("Infochien : Le " .. currentRace .. " (" .. db[currentRace].height .. ") est plus grand que le " .. previousRace .. " (" .. db[previousRace].height ..").")
 									else
-										print("Infochien : Le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. stringRace .. " (" .. db[stringRace].height ..").")
+										print("Infochien : Le " .. previousRace .. " (" .. db[previousRace].height .. ") est plus grand que le " .. currentRace .. " (" .. db[currentRace].height ..").")
 									end
 
 									hasAnswered = true
 							
 							elseif (contextTable["weight"].value and contextTable["race"].value) then
 
-									dogWeight = db[stringRace].weight
+									dogWeight = db[currentRace].weight
 									previousWeight = db[previousRace].weight
 
 									if(dogWeight == 0 or previousWeight == 0) then
 										print("Infochien : Je n'ai pas cette information.")
 									elseif(dogWeight > previousWeight) then
-										print("Infochien : Le " .. stringRace .. " (" .. dogWeight .. " kg) est plus lourd que le " .. previousRace .. " (" .. previousWeight .." kg).")
+										print("Infochien : Le " .. currentRace .. " (" .. dogWeight .. " kg) est plus lourd que le " .. previousRace .. " (" .. previousWeight .." kg).")
 									else
-										print("Infochien : Le " .. previousRace .. " (" .. previousWeight .. " kg) est plus lourd que le " .. stringRace .. " (" .. dogWeight .." kg).")
+										print("Infochien : Le " .. previousRace .. " (" .. previousWeight .. " kg) est plus lourd que le " .. currentRace .. " (" .. dogWeight .." kg).")
 									end
 
 									hasAnswered = true
 
 							elseif (contextTable["origin"].value and contextTable["race"].value) then			
 
-									origin = formatOrigin(db[stringRace].origin)
-									print("\nInfochien : L'origine du " .. stringRace .. " est : " .. origin .. ".")
+									origin = formatOrigin(db[currentRace].origin)
+									print("\nInfochien : L'origine du " .. currentRace .. " est : " .. origin .. ".")
 									hasAnswered = true
 
 							--elseif (contextTable["race"].value) then
@@ -653,7 +697,7 @@ function chatbotMain()
 									--	end	
 									--end
 									--DEBUG : cette partie n'est jamais atteinte
-									print("\nInfochien : Comparons le ".. stringRace .. " et le " .. previousRace .. ".")
+									print("\nInfochien : Comparons le ".. currentRace .. " et le " .. previousRace .. ".")
 									print("\nInfochien : Quelle information voulez-vous savoir ?\n")
 
 									--user input, telling what info to compare----------------
@@ -691,15 +735,15 @@ function chatbotMain()
 								contextTable["race"].value = true
 									if((#line["#race"]) == 2) then
 										--print("\nDEBUG first : 2 chiens")
-										stringRace = line:tag2str("#race")[1]
+										currentRace = line:tag2str("#race")[1]
 										if(line:tag2str("#race")[1] ~= line:tag2str("#race")[2]) then
 											previousRace = line:tag2str("#race")[2]
 										end
 									
 									else --if((#line["#race"]) == 1) then
-										if(stringRace ~= line:tag2str("#race")[1]) then
-											previousRace = stringRace
-											stringRace = line:tag2str("#race")[1]
+										if(currentRace ~= line:tag2str("#race")[1]) then
+											previousRace = currentRace
+											currentRace = line:tag2str("#race")[1]
 										end
 									end	
 
@@ -711,21 +755,33 @@ function chatbotMain()
 							hasAnswered = true
 						end
 					-------------------
-					elseif (answer == "ouafouaf") then --comparaison absolue
+					elseif (answer == "ouafouaf") then --comparaison absolue. On ne peut comparer que la taille et le poids
 						
 						if ((#line["#qualifTaille"]) ~= 0)then
 
-							biggestDog = getBiggestDog()
-							--if(line:tag2str("#size")[1] == "grand") then
-							print("Infochien : Le chien le plus grand de la BD est le " .. biggestDog .. ".")
+							if(line:tag2str("#size")[1] == "grand") then							
+								biggestDog = getBiggestDog()
+								print("Infochien : Le chien le plus grand de la BD est le " .. biggestDog .. ".")
+							
+							else
+								smallestDog = getSmallestDog()
+								print("Infochien : Le plus petit chien de la BD est le " .. smallestDog .. ".")
+
+							end
+
 							hasAnswered = true
-						elseif ((#line["#qualifPoids"]) ~= 0)then
-							heaviestDog = getHeaviestDog()
-							--if(line:tag2str("#size")[1] == "grand") then
-							print("Infochien : Le chien le plus gros de la BD est le " .. heaviestDog .. ".")
-							hasAnswered = true
+
 						else
-							print("Debug: Rien")
+							if(line:tag2str("#qualifPoids")[1] == "gros" or line:tag2str("#qualifPoids")[1] == "lourd") then
+								heaviestDog = getHeaviestDog()
+								print("Infochien : Le chien le plus lourd de la BD est le " .. heaviestDog .. ".")
+							else
+								lightestDog = getLightestDog()
+								print("Infochien : Le chien le plus léger de la BD est le " .. lightestDog .. ".")
+							end
+							hasAnswered = true
+						--else
+						--	print("Debug: Je ne sais pas ce que vous avez voulu comparer.")
 						end
 					end
 
@@ -734,32 +790,32 @@ function chatbotMain()
 				else
 					if (#line["#race"] == 2) then
 
-						print("Infochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".")
+						print("Infochien : Parlons du " .. currentRace .. " et du " .. previousRace .. ".")
 						hasAnswered = true
 
 					--tell size
 					elseif (contextTable["size"].value and contextTable["race"].value)then
-							if (db[stringRace].height ~= "de taille inconnue") then
-								print("Infochien : Le " .. stringRace .. " est un chien " .. db[stringRace].height .. " (" .. db[stringRace].measure .. " cm).")
+							if (db[currentRace].height ~= "de taille inconnue") then
+								print("Infochien : Le " .. currentRace .. " est un chien " .. db[currentRace].height .. " (" .. db[currentRace].measure .. " cm).")
 							else
-								print("Infochien : Le " .. stringRace .. " est un chien de " .. db[stringRace].measure .. " cm.")
+								print("Infochien : Le " .. currentRace .. " est un chien de " .. db[currentRace].measure .. " cm.")
 							end
 							hasAnswered = true
 
 					--tell use
 					elseif (contextTable["use"].value and contextTable["race"].value)then
 									
-							io.write("Infochien : L'utilisation du " .. stringRace .. " est ")
+							io.write("Infochien : L'utilisation du " .. currentRace .. " est ")
 								 
 							-- For every item in the list, including correct use of comma
-							for useCount = 1, #db[stringRace].use do
+							for useCount = 1, #db[currentRace].use do
 									
-									displayUse = db[stringRace].use[useCount]
+									displayUse = db[currentRace].use[useCount]
 									displayUse = displayUse:gsub(" \' ", "\'")
-									if(useCount == #db[stringRace].use) then
+									if(useCount == #db[currentRace].use) then
 											io.write("et " .. displayUse .. ".")
 
-									elseif (useCount == #db[stringRace].use-1) then
+									elseif (useCount == #db[currentRace].use-1) then
 
 											io.write(displayUse .. " ")
 									else 
@@ -771,10 +827,10 @@ function chatbotMain()
 							hasAnswered = true
 					elseif (contextTable["weight"].value and contextTable["race"].value) then
 
-						if(db[stringRace].weight == 0 ) then
+						if(db[currentRace].weight == 0 ) then
 							print("Infochien : Désolé, mais je n'ai pas cette information.")
 						else
-							print("Infochien : Le poids du " .. stringRace .. " est " .. db[stringRace].weight .. "kg.")
+							print("Infochien : Le poids du " .. currentRace .. " est " .. db[currentRace].weight .. "kg.")
 						end	
 						hasAnswered = true
 							--set context weight to false here ? TODO ?
@@ -785,18 +841,17 @@ function chatbotMain()
 
 					elseif (contextTable["origin"].value and contextTable["race"].value) then	
 
-							origin = formatOrigin(db[stringRace].origin)				
-							print("Infochien : L'origine du " .. stringRace .. " est : " .. origin .. ".")
+							origin = formatOrigin(db[currentRace].origin)				
+							print("Infochien : L'origine du " .. currentRace .. " est : " .. origin .. ".")
 							hasAnswered = true
 
 					elseif (contextTable["race"].value) then
 						if(previousRace ~= nil) then
-							print("Infochien : Parlons du " .. stringRace .. " et du " .. previousRace .. ".")
+							print("Infochien : Parlons du " .. currentRace .. " et du " .. previousRace .. ".")
 						else
-							print("Infochien : Parlons du " .. stringRace .. ".")
+							print("Infochien : Parlons du " .. currentRace .. ".")
 						end
 
-						--je l'ai pas mis pour une raison mais on va le laisser
 						hasAnswered = true
 
 					else
@@ -823,5 +878,4 @@ end
 
 
 -- Main
---print("-Debug: Main\n")
 chatbotMain()
