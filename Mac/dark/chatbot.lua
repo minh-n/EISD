@@ -280,7 +280,9 @@ function parseUserAnswer() --with levenshtein distance
 	line = line:gsub("é", "e") 
 	line = line:gsub("%p", " %0 ") --putting spaces around punctuation signs
 	line = line:gsub(" %- ", "-")
-	line = lev(line)
+
+	--Trouver les tags avec la distance de Levenshtein
+	line = lev(line)		
 	return line
 end
 
@@ -488,16 +490,18 @@ function chatbotMain()
 					--end
 				end	
 
-				--labrador
-				--if (currentRace == "labrador") then
-				--	currentRace = "labrador retriever"
-				--elseif (previousRace == "labrador") then
-				--	previousRace = "labrador retriever"
-				--end
-
 				currentAnswerHasMeaning = true
 			end
 		end
+
+		------------------------------------------------------------
+		-- 
+		-- Replissage
+		-- du 
+		-- contexte
+		--
+		------------------------------------------------------------
+
 		if (#line["#use"]) ~= 0 then
 			contextTable["use"].value = true
 			contextTable["use"].count = 0
@@ -548,11 +552,14 @@ function chatbotMain()
 			contextTable["race"].value = false
 			currentAnswerHasMeaning = true
 		end
-		--Trouver les tags avec la distance de Levenshtein
 
-
-		-- génération du dialogue
-
+		------------------------------------------------------------
+		-- 
+		-- Génération
+		-- du 
+		-- dialogue
+		--
+		------------------------------------------------------------
 		--
 		-- HAS MEANING
 		if(currentAnswerHasMeaning) then
