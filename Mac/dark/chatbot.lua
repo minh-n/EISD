@@ -766,7 +766,7 @@ function chatbotMain()
 						
 						if ((#line["#qualifTaille"]) ~= 0)then
 
-							if(line:tag2str("#size")[1] == "grand") then							
+							if(line:tag2str("#qualifTaille")[1] == "grand") then							
 								biggestDog = getBiggestDog()
 								print("Infochien : Le chien le plus grand de la BD est le " .. biggestDog .. ".")
 							
@@ -790,6 +790,9 @@ function chatbotMain()
 						--else
 						--	print("Debug: Je ne sais pas ce que vous avez voulu comparer.")
 						end
+
+					else
+						print("Infochien : je n'ai pas compris.")
 					end
 
 				---------------------------------

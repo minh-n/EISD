@@ -145,6 +145,17 @@ for u,v in pairs(db) do
 end
 
 
+for k,v in pairs(db) do
+
+	i = string.find(k, "é")
+	if(i ~= NIL) then
+		name = k:gsub("é", "e")
+		db[name] = db[k]
+		db[k] = NIL
+	end
+end
+
+
 --print(serialize(statistics))
 
 --print(serialize(db))
