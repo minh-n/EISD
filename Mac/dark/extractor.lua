@@ -34,7 +34,7 @@ dog_weight:pattern([[ 	[#weight #d] #weightunit] ]])
 dog_structured:pattern([[ [#measure #d] #unit ]])
 
 -- Bases de données (non structurées et structurées)
-db = {}		
+local db = {}		
 local si = {}
 
 -- Sections
@@ -126,14 +126,15 @@ for filename in os.dir(".") do
 		if checkSection(section_structured, line) then structured = true end
 	end	
 	
-	fillingMissingValues(race, db, si)
+	--fillingMissingValues(race, db, si)
 end
-
-
-
 
 local statistics = compareWeight(db, si)
 statistics = compareHeight(db, si, statistics)
+statistics = addedStatistics(db, statistics)
+print(serialize(statistics))
+
+fillingMissingValues(db, si)
 
 for u,v in pairs(db) do
 	i = string.find(u, " %- ")
@@ -142,7 +143,8 @@ for u,v in pairs(db) do
 		db[name] = db[u]
 		db[u] = NIL
 	end
-end
+	
+end	
 
 
 for k,v in pairs(db) do
@@ -156,8 +158,11 @@ for k,v in pairs(db) do
 end
 
 
---print(serialize(statistics))
 
-print(serialize(db))
-print("\n#############\n")
+
+--db["terre-neuve"] = db["terre - neuve"]
+--db["terre - neuve"] = NIL
+
+--print(serialize(db))
+--print("\n#############\n")
 --print(serialize(si))

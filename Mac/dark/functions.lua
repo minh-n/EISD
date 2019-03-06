@@ -232,10 +232,9 @@ function compareWeight(db, si)
 	
 	local statistics = {}
 	statistics.weight = {}
-	statistics.weight.found = found
-	statistics.weight.successes = successes
-	statistics.weight.total = total
-	statistics.weight.structured = found_in_structured
+	statistics.weight.found = math.floor((found/total)*100) .. "% on " .. total .. " dogs"
+	statistics.weight.successes = math.floor(successes *100 / found) .. "% accuracy (comparing non-structured weights with structured weights)"
+	statistics.weight.structured = "found " .. found_in_structured .. " new weights in structured data"
 
 	return statistics
 end
@@ -265,39 +264,59 @@ function compareHeight(db, si, statistics)
 	end
 	
 	statistics.height = {}
-	statistics.height.found = found
-	statistics.height.successes = successes
-	statistics.height.total = total
-	statistics.height.structured = found_in_structured
+	statistics.height.found = math.floor((found/total)*100) .. "% on " .. total .. " dogs"
+	statistics.height.successes = math.floor(successes *100 / found) .. "% accuracy (comparing non-structured heights with structured heights)"
+	statistics.height.structured = "found " .. found_in_structured .. " new heights in structured data"
 
 	return statistics
 end
 
-function fillingMissingValues(race, db, si)
-	--if db[race].weight == 0 then
-	--	db[race].weight = "inconnu"
-	--else
-	--	db[race].weight = tostring(db[race].weight)
-	--end
+function addedStatistics(db, statistics)
+	found = 0
+	total = 0
 	
-	if db[race].origin == NIL then
-		db[race].origin = "inconnue"
+	use_avg = 0
+	dogs_with_one_use = 0
+	
+	for race, _ in pairs(db) do
+		if db[race].origin ~= NIL then
+			found = found + 1
+		end
+		if #db[race].use == 1 then
+			dogs_with_one_use = dogs_with_one_use + 1
+		end
+		use_avg = use_avg + #db[race].use
+		total = total + 1
 	end
 	
-	if db[race].height == NIL then
-		db[race].height = "de taille inconnue"
-	end
-	
-	if(db[race].weight == 0) then
-		if(si[race].weight ~= NIL) then
-			db[race].weight = si[race].weight.high
+	statistics.origin = {}
+	statistics.origin.found = math.floor((found/total)*100) .. "% on " .. total .. " dogs"
+	statistics.use = {}
+	statistics.use.average = math.floor(use_avg / total) .. " uses per dog"
+	statistics.use.pet_dogs = dogs_with_one_use .. " dogs with only use : pet"
+	return statistics
+end
+
+function fillingMissingValues(db, si)
+	for race, _ in pairs(db) do
+		if db[race].origin == NIL then
+			db[race].origin = "inconnue"
+		end
+		
+		if db[race].height == NIL then
+			db[race].height = "de taille inconnue"
+		end
+		
+		if(db[race].weight == 0) then
+			if(si[race].weight ~= NIL) then
+				db[race].weight = si[race].weight.high
+			end
+		end
+		
+		if(db[race].measure == 0) then
+			if(si[race].height ~= NIL) then
+				db[race].measure = si[race].height.high
+			end
 		end
 	end
-	
-	if(db[race].measure == 0) then
-		if(si[race].height ~= NIL) then
-			db[race].measure = si[race].height.high
-		end
-	end
-	--]]
 end
