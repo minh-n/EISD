@@ -158,6 +158,6 @@ end
 
 --print(serialize(statistics))
 
---print(serialize(db))
---print("\n#############\n")
+print(serialize(db))
+print("\n#############\n")
 --print(serialize(si))

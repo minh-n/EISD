@@ -21,7 +21,8 @@ otherAnswer={
 
 
 -- database
-require("extractor")
+--require("extractor")
+require("db")
 
 -- lexique
 pipe = dark.pipeline()
@@ -36,7 +37,6 @@ end
 placeList = {}
 for k,v in pairs(db) do
 	table.insert(placeList, v.origin)
-	--print(placeList[#placeList])
 end
 
 
@@ -71,14 +71,12 @@ function lev(line)
 
 	for m in line:gmatch("%w+") do
 		table.insert(words, m) 
-		--print("Debug words :" .. m .. "\n")
 
 	end --separating the user input into words
 
 	levCoef = 2
 
 	for _,word in pairs(words) do 
-		--print("\nDebug : len" .. string.len(word))
 
 		if (string.len(word) < 4) then
 			goto endOfNestedFor
@@ -86,36 +84,23 @@ function lev(line)
 
 		--replace wrong words for the race etc
 		for _,correctWord in pairs(raceList) do
-				--print("Debug : go into correct race\n")
-				--print("Debug : " .. lev_iter(word, correctWord) .. ".\n")
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
 		for _,correctWord in pairs(sizeLexicon) do
-				--print("Debug : go into correct size\n")
-
-
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
 		for _,correctWord in pairs(useLexicon) do
-
 				if(lev_iter(word, correctWord) <= levCoef) then
 					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
---		for _,correctWord in pairs(originLexicon) do
---
---				if(lev_iter(word, correctWord) <= levCoef) then
---					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
---					goto endOfNestedFor -- double break to avoid checking a word twice
---				end
---		end
 		for _,correctWord in pairs(weightLexicon) do
 
 				if(lev_iter(word, correctWord) <= levCoef) then
@@ -133,9 +118,6 @@ function lev(line)
 
 		::endOfNestedFor:: 
 	end
-
-	--TODO : ne pas vérifier chaque mot mais pattern de question ? Approche statistique
-
 	return line
 end
 
