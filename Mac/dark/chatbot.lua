@@ -43,10 +43,10 @@ end
 helloLexicon = {"bonjour", "salut", "henlo", "yo"}
 sizeLexicon = {"taille", "mesure", "hauteur", "cm", "m"}
 useLexicon = {"utilise", "utilite", "utilisation", "use", "emploi"}
-originLexicon = {"origine", "vient", "where", "pays", "région"}
+originLexicon = {"origine", "vient", "where", "pays", "région", "vient-il"}
 weightLexicon = {"poids", "peser", "pèse", "pèsent", "kilo", "kg", "kilogrammes"}
 compareLexicon = {"entre le", "entre les", "lequel est", "comparer", "comparaison", "compare", "quel est le plus", "comparons", "quel chien est le plus", "le plus", "la plus" }
-listLexicon = {"liste", "lister", "tous"}
+listLexicon = {"liste", "lister"}
 
 qualifTaille = {"grand", "petit", "grande", "petite"}
 qualifPoids = {"leger", "lourd", "gros", "grosse"}
@@ -128,18 +128,18 @@ function lev2()
 
 end
 
-
-function convertWordIntoSize(line)
+--Useless
+function convertWordIntoSize(line) 
 
 	size = 0
-	line = line:gsub("kg", "")
+	line = line:gsub("cm", "")
 	patternNumbers = "[0-9]+"
 
 	if string.match(line, patternNumbers) then
 	    size = line:tostring()
 	end 
 
-	if((string.find(line, "grand") ~= nil) or string.find(line, "fort") ~= nil)then
+	if((string.find(line, "grand") ~= nil) or string.find(line, "fort") ~= nil) then
 		size = 40
 	elseif(string.find(line, "moyen") ~= nil) then
 		size = 20
@@ -283,6 +283,7 @@ function isVoyelle(str)
 	end
 end
 
+--return a list of dogs corresponding to a specific location (example : 'Allemagne')
 function getDogFromLocation(location)
 
 	chiens = {}
@@ -324,27 +325,8 @@ function getDogFromLocation(location)
 	return str
 end
 
-
-
---TODO
---Moins de contexte
---Optimiser levenshtein
---Quel autre chien a la même origine ?
---combien de chien de la même taille ?
---je ne sais pas, je ne comprend pas, je n'ai pas l'info : ok
---BONJOUR : ok
--- TODO : gestion du contexte en mieux
-				-- stocker le chien précédent : OK !
-				-- les accents : hmm...
-				-- je ne sais pas, je ne comprend pas, ou je fais avec les infos disponibles : pas ouf en vrai
-				-- recherche approximative (mal orthographié), distance (de Levenshtein par ex, à retrouver sur le web en LUA) : OK !
-				-- donner une info complémentaire : pas ouf ?
-
-		--todo : reset le contexte quand on mentionne une race = Non !
-
 --read the user's input and answers accordingly
 function chatbotMain()
-	--print("-Debug: chatbotMain()\n")
 	print("Infochien : Bonjour je suis un chienbot ! Je peux parler de beaucoup de chiens.\n")
 
 	local contextTable = { 
@@ -371,11 +353,6 @@ function chatbotMain()
 		["origin"] = {
 				value = false,
 				label = "l'origine",
-				count = 0
-		},
-		["unknown"] = {
-				value = false,
-				label = "donnée inconnue",
 				count = 0
 		}
 	}
@@ -585,6 +562,8 @@ function chatbotMain()
 							end
 						end
 						answer = "ouaf"
+					elseif (currentRace == nil and previousRace == nil) then
+						answer = "ouafouaf" --forcer la comparaison absolue
 					else
 						print("Infochien : Voulez-vous comparer deux chiens (dites 'ouaf'), ou faire une comparaison absolue (dites 'ouaf ouaf') ?\n")
 						answer = getUserAnswer()
@@ -600,7 +579,7 @@ function chatbotMain()
 
 						--GET RACE
 						if(currentRace == nil or previousRace == nil) then
-							print("\nInfochien : Quels chiens voulez-vous comparer ?\n")
+							print("\nInfochien : Quel autre chien voulez-vous comparer ?\n")
 
 							line = parseUserAnswer()
 							line = dark.sequence(line)
@@ -804,14 +783,19 @@ function chatbotMain()
 									
 									displayUse = db[currentRace].use[useCount]
 									displayUse = displayUse:gsub(" \' ", "\'")
-									if(useCount == #db[currentRace].use) then
-											io.write("et " .. displayUse .. ".")
 
-									elseif (useCount == #db[currentRace].use-1) then
+									if (#db[currentRace].use > 1) then
+										if(useCount == #db[currentRace].use) then
+												io.write("et " .. displayUse .. ".")
 
-											io.write(displayUse .. " ")
-									else 
-											io.write(displayUse .. ", ")
+										elseif (useCount == #db[currentRace].use-1) then
+
+												io.write(displayUse .. " ")
+										else 
+												io.write(displayUse .. ", ")
+										end
+									else
+										io.write(displayUse .. ".")
 									end
 							end
 
