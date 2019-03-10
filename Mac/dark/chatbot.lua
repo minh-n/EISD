@@ -18,8 +18,10 @@ otherAnswer={
 }
 
 -- database
---require("extractor") (pour lancer avec l'extraction d'information)
-require("db") -- (pour lancer avec la base de donnée déjà extraite)
+--require("extractor") --(pour lancer avec l'extraction d'information)
+--require("db_demo") -- (pour lancer avec la base de donnée de la présentation)
+require("db_full") -- (pour lancer avec la base de donnée complète de 27 chiens)
+
 
 -- lexique
 pipe = dark.pipeline()
@@ -71,13 +73,15 @@ function lev(line)
 
 	end --separating the user input into words
 
-	levCoef = 2
 
 	for _,word in pairs(words) do 
+
 
 		if (string.len(word) < 4) then
 			goto endOfNestedFor
 		end
+
+		levCoef = (string.len(word)/3)-((string.len(word)/3)%1) --proportional to the word's length
 
 		--replace wrong words for the race etc
 		for _,correctWord in pairs(raceList) do
@@ -118,7 +122,7 @@ function lev(line)
 	return line
 end
 
---Non utilité
+--Non utilisé
 function convertWordIntoSize(line) 
 
 	size = 0
@@ -141,7 +145,7 @@ function convertWordIntoSize(line)
 end
 
 
---Non utilité
+--Non utilisé
 function convertWordIntoWeight(line)
 
 	size = 0
@@ -737,7 +741,11 @@ function chatbotMain()
 							if (db[currentRace].height ~= "de taille inconnue") then
 								print("Infochien : Le " .. currentRace .. " est un chien " .. db[currentRace].height .. " (" .. db[currentRace].measure .. " cm).")
 							else
-								print("Infochien : Le " .. currentRace .. " est un chien de " .. db[currentRace].measure .. " cm.")
+								if(db[currentRace].measure == 0 ) then
+									print("Infochien : Désolé, mais je n'ai pas cette information.")
+								else
+									print("Infochien : Le " .. currentRace .. " est un chien de " .. db[currentRace].measure .. " cm.")
+								end
 							end
 							hasAnswered = true
 

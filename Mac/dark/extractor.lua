@@ -34,7 +34,7 @@ dog_weight:pattern([[ 	[#weight #d] #weightunit] ]])
 dog_structured:pattern([[ [#measure #d] #unit ]])
 
 -- Bases de données (non structurées et structurées)
-local db = {}		
+db = {}		
 local si = {}
 
 -- Sections
@@ -163,6 +163,6 @@ end
 --db["terre-neuve"] = db["terre - neuve"]
 --db["terre - neuve"] = NIL
 
---print(serialize(db))
+print(serialize(db))
 --print("\n#############\n")
 --print(serialize(si))
