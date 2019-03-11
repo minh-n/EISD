@@ -19,8 +19,8 @@ otherAnswer={
 
 -- database
 --require("extractor") --(pour lancer avec l'extraction d'information)
---require("db_demo") -- (pour lancer avec la base de donnée de la présentation)
-require("db_full") -- (pour lancer avec la base de donnée complète de 27 chiens)
+--require("db/db_demo") -- (pour lancer avec la base de donnée de la présentation)
+require("db/db_full") -- (pour lancer avec la base de donnée complète de 27 chiens)
 
 
 -- lexique
