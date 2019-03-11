@@ -109,13 +109,13 @@ function lev(line)
 					goto endOfNestedFor -- double break to avoid checking a word twice
 				end
 		end
-		for _,correctWord in pairs(placeList) do
+		--for _,correctWord in pairs(placeList) do
 
-				if(lev_iter(word, correctWord) <= levCoef) then
-					line = line:gsub(word, correctWord) --remplacer le mot avec une typo
-					goto endOfNestedFor -- double break to avoid checking a word twice
-				end
-		end
+		--		if(lev_iter(word, correctWord) <= levCoef) then
+		--			line = line:gsub(word, correctWord) --remplacer le mot avec une typo
+		--			goto endOfNestedFor -- double break to avoid checking a word twice
+		--		end
+		--	end
 
 		::endOfNestedFor:: 
 	end
