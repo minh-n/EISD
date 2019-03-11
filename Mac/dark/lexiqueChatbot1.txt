@@ -1,9 +1,0 @@
-test
-essai
-testing
-test unitaire
-salut expr
-debug
-debugs
-bugs
-debuggage
